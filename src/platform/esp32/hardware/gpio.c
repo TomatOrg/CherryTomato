@@ -95,7 +95,7 @@ static volatile IO_MUX_x* get_io_mux_reg(int gpio) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static inline void gpio_write_output_set(uint8_t gpio_num) {
+static inline void gpio_write_out_en_set(uint8_t gpio_num) {
     if (gpio_num < 32) {
         GPIO_ENABLE_W1TS = 1 << gpio_num;
     } else {
@@ -103,7 +103,7 @@ static inline void gpio_write_output_set(uint8_t gpio_num) {
     }
 }
 
-static inline void gpio_write_output_clear(uint8_t gpio_num) {
+static inline void gpio_write_out_en_clear(uint8_t gpio_num) {
     if (gpio_num < 32) {
         GPIO_ENABLE_W1TC = 1 << gpio_num;
     } else {
@@ -112,7 +112,7 @@ static inline void gpio_write_output_clear(uint8_t gpio_num) {
 }
 
 static void gpio_init_output(uint8_t gpio_num, uint8_t alternate, bool open_drain) {
-    gpio_write_output_set(gpio_num);
+    gpio_write_out_en_set(gpio_num);
 
     GPIO_PINn[gpio_num].pad_driver = open_drain;
     GPIO_FUNCn_OUT_SEL_CFG[gpio_num].out_sel = 256;
@@ -138,14 +138,14 @@ void gpio_set_to_push_pull_output(uint8_t gpio_num) {
 
 void gpio_set_output_high(uint8_t gpio_num, bool high) {
     if (high) {
-        gpio_write_output_set(high);
+        gpio_set_high(gpio_num);
     } else {
-        gpio_write_output_clear(gpio_num);
+        gpio_set_low(gpio_num);
     }
 }
 
 void gpio_set_to_input(uint8_t gpio_num) {
-    gpio_write_output_clear(gpio_num);
+    gpio_write_out_en_clear(gpio_num);
 
     GPIO_FUNCn_OUT_SEL_CFG[gpio_num].out_sel = 256;
 
@@ -159,6 +159,14 @@ void gpio_set_to_input(uint8_t gpio_num) {
     *mux = mux_value;
 }
 
+void gpio_enable_output(uint8_t gpio_num, bool on) {
+    if (on) {
+        gpio_write_out_en_set(gpio_num);
+    } else {
+        gpio_write_out_en_clear(gpio_num);
+    }
+}
+
 void gpio_enable_input(uint8_t gpio_num, bool on) {
     get_io_mux_reg(gpio_num)->fun_ie = on;
 }
@@ -169,9 +177,9 @@ void gpio_internal_pull_up(uint8_t gpio_num, bool on) {
 
 void gpio_set_high(uint8_t gpio_num) {
     if (gpio_num < 32) {
-        GPIO_OUT_W1TC = 1 << gpio_num;
+        GPIO_OUT_W1TS = 1 << gpio_num;
     } else {
-        GPIO_OUT1_W1TC = 1 << (gpio_num - 32);
+        GPIO_OUT1_W1TS = 1 << (gpio_num - 32);
     }
 }
 

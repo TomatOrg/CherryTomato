@@ -39,3 +39,7 @@ static inline void disable_interrupts() {
 static inline void enable_interrupts() {
     WSR(INTENABLE, (1 << XCHAL_NUM_INTLEVELS) - 1);
 }
+
+static inline uint32_t __ccount() {
+    return RSR(CCOUNT);
+}

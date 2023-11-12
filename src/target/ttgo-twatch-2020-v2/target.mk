@@ -7,6 +7,7 @@ SRCS 		+= $(TARGET_DIR)/target.c
 
 # Add drivers
 SRCS 		+= src/drivers/axp202/axp202.c
+SRCS 		+= src/drivers/st7789/st7789.c
 
 all: $(BIN_DIR)/firmware.bin
 

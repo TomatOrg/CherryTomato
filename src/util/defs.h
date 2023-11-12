@@ -14,6 +14,26 @@
 #define PACKED __attribute__((packed))
 #define MMIO __attribute__((packed, aligned(4)))
 
+#define ABS(x) \
+    ({ \
+        typeof(x) __x = x; \
+        __x < 0 ? -__x : __x; \
+    })
+
+#define MAX(a, b) \
+    ({ \
+        typeof(a) __a = a; \
+        typeof(b) __b = b; \
+        __a > __b ? __a : __b; \
+    })
+
+#define MIN(a, b) \
+    ({ \
+        typeof(a) __a = a; \
+        typeof(b) __b = b; \
+        __a > __b ? __b : __a; \
+    })
+
 #define ALIGN_UP(x, align) \
     ({ \
         size_t _x = (size_t)(x); \

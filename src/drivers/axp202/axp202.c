@@ -103,6 +103,12 @@ err_t axp202_init() {
     LOG_TRACE("\t--- AXP202 ---");
     CHECK_AND_RETHROW(axp202_probe());
 
+    // set the power off time to 4 seconds
+    uint8_t reg;
+    axp202_read(AXP202_POK_SET, &reg, 1);
+    reg &= 0b11;
+    axp202_write(AXP202_POK_SET, &reg, 1);
+
 cleanup:
     return err;
 }
@@ -124,6 +130,16 @@ err_t axp202_set_ldo2_voltage(uint16_t mv) {
     rval &= 0xF0;
     rval |= (val << 4);
     CHECK_AND_RETHROW(axp202_write(AXP202_LDO24OUT_VOL, &rval, 1));
+
+cleanup:
+    return err;
+}
+
+err_t axp202_set_ldo3_volatge(uint16_t mv) {
+    err_t err = NO_ERROR;
+
+    uint8_t rval = (mv - 700) / 25;
+    CHECK_AND_RETHROW(axp202_write(AXP202_LDO3OUT_VOL, &rval, 1));
 
 cleanup:
     return err;
@@ -160,7 +176,7 @@ err_t axp202_set_power_output(axp202_channel_t channel, bool on) {
     uint8_t reg;
     CHECK_AND_RETHROW(axp202_read(AXP202_LDO234_DC23_CTL, &reg, 1));
     if (on) {
-        reg |= ~(1 << channel);
+        reg |= (1 << channel);
     } else {
         reg &= ~(1 << channel);
     }

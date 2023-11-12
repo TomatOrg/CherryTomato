@@ -91,3 +91,5 @@ memcpy = 0x4000c2c8;
 memset = 0x4000c44c;
 memcmp = 0x4000c260;
 memmove = 0x4000c3c0;
+
+xthal_memcpy = 0x4000c0bc;

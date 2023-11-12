@@ -13,9 +13,9 @@ ARCH 				:= xtensa
 HAS_CONSOLE			:= 1
 
 # Add platform code
-SRCS				+= $(PLATFORM_DIR)/hardware/dport.c
 SRCS				+= $(PLATFORM_DIR)/hardware/gpio.c
 SRCS				+= $(PLATFORM_DIR)/hardware/i2c.c
+SRCS				+= $(PLATFORM_DIR)/hardware/spi.c
 SRCS				+= $(PLATFORM_DIR)/entry.c
 SRCS				+= $(PLATFORM_DIR)/entry.S
 

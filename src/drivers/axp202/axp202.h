@@ -39,6 +39,8 @@ typedef enum axp202_ldo4 {
  */
 err_t axp202_set_ldo2_voltage(uint16_t mv);
 
+err_t axp202_set_ldo3_volatge(uint16_t mv);
+
 /**
  * Set the LDO4 output voltage, must be one of the given
  * options

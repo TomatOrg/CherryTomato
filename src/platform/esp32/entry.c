@@ -93,6 +93,11 @@ static void esp_init() {
     WSR(VECBASE, __vecbase);
 }
 
+/**
+ * The current cpu freq, default to 80MHz
+ */
+static uint32_t m_cpu_freq = 80;
+
 void entry() {
     // early setup, configure everything we need
     esp_init();
@@ -116,4 +121,13 @@ void entry() {
 
     // setup the timer interrupt
     cherry_tomato_entry();
+}
+
+/**
+ * Implement delay using Xtensa ccount
+ */
+void delay(uint32_t us) {
+    uint32_t clocks = (uint32_t)((uint64_t)us * m_cpu_freq);
+    uint32_t start = __ccount();
+    while (__ccount() - start < clocks);
 }
