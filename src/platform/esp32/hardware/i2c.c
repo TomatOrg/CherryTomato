@@ -299,7 +299,13 @@ static uint8_t i2c_read_fifo(i2c_t* i2c) {
     return (uint8_t)I2C_DATA(i2c);
 }
 
+static void i2c_clear_all_interrupts(i2c_t* i2c) {
+    I2C_INT_CLR(i2c).packed = 0x3ffff;
+}
+
 static void i2c_setup_read(i2c_t* i2c, uint8_t addr, size_t length) {
+    i2c_clear_all_interrupts(i2c);
+
     i2c_add_start_cmd(i2c);
     i2c_add_write_cmd(i2c, I2C_ACK, true, 1);
     if (length > 1) {
@@ -313,6 +319,8 @@ static void i2c_setup_read(i2c_t* i2c, uint8_t addr, size_t length) {
 }
 
 static void i2c_setup_write(i2c_t* i2c, uint8_t addr, size_t length) {
+    i2c_clear_all_interrupts(i2c);
+
     i2c_add_start_cmd(i2c);
     i2c_add_write_cmd(i2c, I2C_ACK, true, 1 + length);
     i2c_add_stop_cmd(i2c);
@@ -329,7 +337,6 @@ static err_t i2c_wait_for_completion(i2c_t* i2c) {
     err_t err = NO_ERROR;
 
     // wait for the interrupt
-    // TODO: use real interrupts
     for (;;) {
         I2C_INT_REG reg = I2C_INT_RAW(i2c);
         CHECK(reg.time_out == 0);
@@ -340,9 +347,6 @@ static err_t i2c_wait_for_completion(i2c_t* i2c) {
             break;
         }
     }
-
-    // TODO: is there a way to fix this stupidity
-    for (volatile int a = 0; a < 1000; a++);
 
     // check everything is done properly
     for (int i = 0; i < 16; i++) {

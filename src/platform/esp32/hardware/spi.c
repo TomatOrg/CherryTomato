@@ -205,10 +205,13 @@ void spi_init(
     user.ck_out_edge = (mode == SPI_DATA_MODE1 || mode == SPI_DATA_MODE2) ? 1 : 0;
     SPI_USER(spi) = user;
 
+    SPI_CTRL(spi).wr_bit_order = 0;
+    SPI_CTRL(spi).rd_bit_order = 0;
+
     // setup the pins
     if (sck != INVALID_GPIO) {
         gpio_set_to_push_pull_output(sck);
-        gpio_connect_peripheral_to_output(sck, spi->sck);
+        gpio_connect_peripheral_to_output(sck, spi->sclk);
     }
 
     if (mosi != INVALID_GPIO) {
@@ -229,27 +232,31 @@ void spi_init(
 
 void spi_write(spi_t* spi, uint8_t* bytes, int size) {
     // spit into chunks
-    for (; size > 0; size -= 64, bytes += 64) {
-        int len = MIN(64, size) - 1;
-        SPI_MOSI_DLEN(spi) = len;
+//    for (; size > 0; size -= 64, bytes += 64) {
+//        int len = MIN(64, size) - 1;
+//        SPI_MOSI_DLEN(spi) = len * 8 - 1;
+//
+//        // write the data into the memory
+//        xthal_memcpy((void*)&SPI_W(spi, 0), bytes, ALIGN_DOWN(len, 4));
+//
+//        // copy the unaligned data
+//        uint32_t word = 0;
+//        int unaligned = (len % 4) != 0;
+//        switch (unaligned) {
+//            case 0: continue;
+//            case 1: __builtin_memcpy(&word, bytes, 1); break;
+//            case 2: __builtin_memcpy(&word, bytes, 2); break;
+//            case 3: __builtin_memcpy(&word, bytes, 3); break;
+//        }
+//        SPI_W(spi, len / 4) = word;
+//
+//        // flush
+//        SPI_CMD(spi).usr = 1;
+//        while (SPI_CMD(spi).usr);
+//    }
 
-        // write the data into the memory
-        xthal_memcpy((void*)&SPI_W(spi, 0), bytes, ALIGN_DOWN(len, 4));
-
-        // copy the unaligned data
-        uint32_t word = 0;
-        int unaligned = (len % 4) != 0;
-        switch (unaligned) {
-            case 0: continue;
-            case 1: __builtin_memcpy(&word, bytes, 1); break;
-            case 2: __builtin_memcpy(&word, bytes, 2); break;
-            case 3: __builtin_memcpy(&word, bytes, 3); break;
-        }
-        SPI_W(spi, len / 4) = word;
-
-        // flush
-        SPI_CMD(spi).usr = 1;
-        while (SPI_CMD(spi).usr);
+    for (int i = 0; i < size; i++) {
+        spi_write_byte(spi, bytes[i]);
     }
 }
 
@@ -257,7 +264,7 @@ void spi_write_aligned(spi_t* spi, uint8_t* bytes, int size) {
     // spit into chunks
     for (; size > 0; size -= 64, bytes += 64) {
         int len = MIN(64, size) - 1;
-        SPI_MOSI_DLEN(spi) = len;
+        SPI_MOSI_DLEN(spi) = len * 8 - 1;
 
         // write the data into the memory
         xthal_memcpy((void*)&SPI_W(spi, 0), bytes, len);
@@ -270,8 +277,8 @@ void spi_write_aligned(spi_t* spi, uint8_t* bytes, int size) {
 
 void spi_write_byte(spi_t* spi, uint8_t byte) {
     // write it
-    SPI_MOSI_DLEN(spi) = 1;
-    SPI_W(spi, 0) = byte;
+    SPI_MOSI_DLEN(spi) = 7;
+    SPI_W(spi, 0) = (uint32_t)byte;
 
     // flush
     SPI_CMD(spi).usr = 1;

@@ -64,21 +64,23 @@
 #define AXP202_INTSTS4 (0x4B)
 #define AXP202_INTSTS5 (0x4C)
 
-static err_t axp202_read(uint8_t reg, uint8_t* data, size_t length) {
+static err_t axp202_read(uint8_t reg, uint8_t* data) {
     err_t err = NO_ERROR;
 
     CHECK_AND_RETHROW(target_axp202_write_bytes(0x35, &reg, 1));
-    CHECK_AND_RETHROW(target_axp202_read_bytes(0x35, data, length));
+    CHECK_AND_RETHROW(target_axp202_read_bytes(0x35, data, 1));
 
 cleanup:
     return err;
 }
 
-static err_t axp202_write(uint8_t reg, const uint8_t* data, size_t length) {
+static err_t axp202_write(uint8_t reg, uint8_t data) {
     err_t err = NO_ERROR;
 
-    CHECK_AND_RETHROW(target_axp202_write_bytes(0x35, &reg, 1));
-    CHECK_AND_RETHROW(target_axp202_write_bytes(0x35, data, length));
+    uint8_t buf[] = {
+        reg, data
+    };
+    CHECK_AND_RETHROW(target_axp202_write_bytes(0x35, buf, 2));
 
 cleanup:
     return err;
@@ -89,7 +91,7 @@ static err_t axp202_probe() {
 
     // read the ic type
     uint8_t ic_type;
-    CHECK_AND_RETHROW(axp202_read(AXP202_IC_TYPE, &ic_type, 1));
+    CHECK_AND_RETHROW(axp202_read(AXP202_IC_TYPE, &ic_type));
     LOG_TRACE("\tChip ID: 0x%02x", ic_type);
     CHECK(ic_type == 0x41);
 
@@ -102,12 +104,6 @@ err_t axp202_init() {
 
     LOG_TRACE("\t--- AXP202 ---");
     CHECK_AND_RETHROW(axp202_probe());
-
-    // set the power off time to 4 seconds
-    uint8_t reg;
-    axp202_read(AXP202_POK_SET, &reg, 1);
-    reg &= 0b11;
-    axp202_write(AXP202_POK_SET, &reg, 1);
 
 cleanup:
     return err;
@@ -126,10 +122,12 @@ err_t axp202_set_ldo2_voltage(uint16_t mv) {
 
     // write it
     uint8_t rval;
-    CHECK_AND_RETHROW(axp202_read(AXP202_LDO24OUT_VOL, &rval, 1));
+    CHECK_AND_RETHROW(axp202_read(AXP202_LDO24OUT_VOL, &rval));
     rval &= 0xF0;
     rval |= (val << 4);
-    CHECK_AND_RETHROW(axp202_write(AXP202_LDO24OUT_VOL, &rval, 1));
+    CHECK_AND_RETHROW(axp202_write(AXP202_LDO24OUT_VOL, rval));
+
+
 
 cleanup:
     return err;
@@ -139,7 +137,7 @@ err_t axp202_set_ldo3_volatge(uint16_t mv) {
     err_t err = NO_ERROR;
 
     uint8_t rval = (mv - 700) / 25;
-    CHECK_AND_RETHROW(axp202_write(AXP202_LDO3OUT_VOL, &rval, 1));
+    CHECK_AND_RETHROW(axp202_write(AXP202_LDO3OUT_VOL, rval));
 
 cleanup:
     return err;
@@ -149,10 +147,10 @@ err_t axp202_set_ldo4_voltage(axp202_ldo4_t mv) {
     err_t err = NO_ERROR;
 
     uint8_t rval;
-    CHECK_AND_RETHROW(axp202_read(AXP202_LDO24OUT_VOL, &rval, 1));
+    CHECK_AND_RETHROW(axp202_read(AXP202_LDO24OUT_VOL, &rval));
     rval &= 0x0F;
     rval |= mv;
-    CHECK_AND_RETHROW(axp202_write(AXP202_LDO24OUT_VOL, &rval, 1));
+    CHECK_AND_RETHROW(axp202_write(AXP202_LDO24OUT_VOL, rval));
 
 cleanup:
     return err;
@@ -162,9 +160,9 @@ err_t axp202_set_vbus_current_limit(axp202_vbus_current_limit_t limit) {
     err_t err = NO_ERROR;
 
     uint8_t reg;
-    CHECK_AND_RETHROW(axp202_read(AXP202_IPS_SET, &reg, 1));
+    CHECK_AND_RETHROW(axp202_read(AXP202_IPS_SET, &reg));
     reg |= limit;
-    CHECK_AND_RETHROW(axp202_write(AXP202_IPS_SET, &reg, 1));
+    CHECK_AND_RETHROW(axp202_write(AXP202_IPS_SET, reg));
 
 cleanup:
     return err;
@@ -174,13 +172,13 @@ err_t axp202_set_power_output(axp202_channel_t channel, bool on) {
     err_t err = NO_ERROR;
 
     uint8_t reg;
-    CHECK_AND_RETHROW(axp202_read(AXP202_LDO234_DC23_CTL, &reg, 1));
+    CHECK_AND_RETHROW(axp202_read(AXP202_LDO234_DC23_CTL, &reg));
     if (on) {
         reg |= (1 << channel);
     } else {
         reg &= ~(1 << channel);
     }
-    CHECK_AND_RETHROW(axp202_write(AXP202_LDO234_DC23_CTL, &reg, 1));
+    CHECK_AND_RETHROW(axp202_write(AXP202_LDO234_DC23_CTL, reg));
 
 cleanup:
     return err;

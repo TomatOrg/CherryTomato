@@ -2,6 +2,7 @@
 #include "st7789.h"
 #include "event/delay.h"
 #include "util/log.h"
+#include "hardware/gpio.h"
 
 #define ST7789_NOP			0x00
 #define ST7789_SWRESET		0x01
@@ -98,7 +99,7 @@ static void st7789_init_color_format() {
 
     st7789_write_command(ST7789_COLMOD);
     target_st7789_write_byte(0x55);
-    delay(10);
+    delay(10000);
 }
 
 static void st7789_init_frame_rate() {
@@ -193,18 +194,6 @@ void st7789_init() {
     // put the display on
     st7789_write_command(ST7789_DISPON);
     delay(120000);
-
-    st7789_write_command(ST7789_CASET);
-    target_st7789_write_byte(0);
-    target_st7789_write_byte(0);
-    target_st7789_write_byte(0);
-    target_st7789_write_byte(239);
-
-    st7789_write_command(ST7789_RASET);
-    target_st7789_write_byte(0);
-    target_st7789_write_byte(0);
-    target_st7789_write_byte(0);
-    target_st7789_write_byte(239);
 
     st7789_write_command(ST7789_RAMWR);
     static uint16_t buffer[240 * 240];

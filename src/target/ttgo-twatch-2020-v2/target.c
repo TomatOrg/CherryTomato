@@ -54,15 +54,17 @@ cleanup:
 static err_t init_display() {
     err_t err = NO_ERROR;
 
-    // make sure dc is output
-    gpio_enable_output(ST7789_DC, true);
-
-    // initialize the display itself
-    st7789_init();
-
     // turn on the backlight
     gpio_enable_output(ST7789_BL, true);
     gpio_set_high(ST7789_BL);
+
+    // make sure dc is output
+    gpio_enable_output(ST7789_DC, true);
+    gpio_set_low(ST7789_CS);
+    gpio_set_low(ST7789_CS);
+
+    // initialize the display itself
+    st7789_init();
 
 cleanup:
     return err;

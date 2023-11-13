@@ -5,7 +5,7 @@
 
 typedef struct spi {
     void* regs;
-    gpio_signal_t sck;
+    gpio_signal_t sclk;
     gpio_signal_t mosi;
     gpio_signal_t miso;
     gpio_signal_t cs;
