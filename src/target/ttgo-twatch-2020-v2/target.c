@@ -61,7 +61,6 @@ static err_t init_display() {
     // make sure dc is output
     gpio_enable_output(ST7789_DC, true);
     gpio_set_low(ST7789_CS);
-    gpio_set_low(ST7789_CS);
 
     // initialize the display itself
     st7789_init();
@@ -75,11 +74,16 @@ void target_entry(void) {
 
     LOG_INFO("Target: TTGO-TWATCH-2020-V2");
 
-    // enable needed clocks
-    DPROT_PERIP_REG perip_clk_en = DPORT_PERIP_CLK_EN;
-    perip_clk_en.i2c_ext0 = 1;      // sensor i2c
-    perip_clk_en.spi2 = 1;          // display spi
-    DPORT_PERIP_CLK_EN = perip_clk_en;
+    // no reset please
+    DPORT_PERIP_RST_EN.packed = 0;
+
+    DPORT_PERIP_RST_EN.i2c_ext0 = 1;
+    DPORT_PERIP_CLK_EN.i2c_ext0 = 1;
+    DPORT_PERIP_RST_EN.i2c_ext0 = 0;
+
+    DPORT_PERIP_RST_EN.spi2 = 1;
+    DPORT_PERIP_CLK_EN.spi2 = 1;
+    DPORT_PERIP_RST_EN.spi2 = 0;
 
     // sensor i2c
     i2c_init(&g_i2c0, SENSOR_SDA, SENSOR_SCL, 100 * 1000);
@@ -87,7 +91,7 @@ void target_entry(void) {
     // display spi
     spi_init(&g_spi2,
              ST7789_SCLK, ST7789_MOSI, INVALID_GPIO, ST7789_CS,
-             8 * 1000 * 1000, SPI_DATA_MODE3);
+             8 * 1000 * 1000, SPI_DATA_MODE0);
 
     // now probe all the ttgo hardware
     LOG_TRACE("Initializing drivers");
@@ -110,5 +114,5 @@ err_t target_axp202_write_bytes(uint8_t addr, const uint8_t* bytes, size_t lengt
 
 void target_st7789_gpio_dc_set_high() { gpio_set_high(ST7789_DC); }
 void target_st7789_gpio_dc_set_low() { gpio_set_low(ST7789_DC); }
-void target_st7789_write_byte(uint8_t byte) { spi_write_byte(&g_spi2, byte); }
-void target_st7789_write_bytes(uint8_t* byte, size_t len) { spi_write(&g_spi2, byte, len); }
+void target_st7789_write_byte(uint8_t byte) { spi_write_byte(&g_spi3, byte); }
+void target_st7789_write_bytes(uint8_t* byte, size_t len) { spi_write(&g_spi3, byte, len); }

@@ -1,4 +1,5 @@
 #include "gpio.h"
+#include "util/except.h"
 
 #include <util/defs.h>
 
@@ -89,6 +90,7 @@ static volatile IO_MUX_x* get_io_mux_reg(int gpio) {
         case 25: addr = 0x3FF49024; break;
         case 26: addr = 0x3FF49028; break;
         case 27: addr = 0x3FF4902C; break;
+        default: ASSERT(!"Invalid IOMUX reg"); break;
     }
     return (volatile IO_MUX_x*)addr;
 }
@@ -113,19 +115,18 @@ static inline void gpio_write_out_en_clear(uint8_t gpio_num) {
 
 static void gpio_init_output(uint8_t gpio_num, uint8_t alternate, bool open_drain) {
     gpio_write_out_en_set(gpio_num);
-
     GPIO_PINn[gpio_num].pad_driver = open_drain;
+
     GPIO_FUNCn_OUT_SEL_CFG[gpio_num].out_sel = 256;
 
-    volatile IO_MUX_x* mux = get_io_mux_reg(gpio_num);
-    IO_MUX_x mux_value = *mux;
+    IO_MUX_x mux_value = *get_io_mux_reg(gpio_num);
     mux_value.mcu_sel = alternate;
     mux_value.fun_ie = open_drain;
     mux_value.fun_wpd = 0;
     mux_value.fun_wpu = 0;
     mux_value.fun_drv = 2; // 20mA
     mux_value.slp_sel = 0;
-    *mux = mux_value;
+    *get_io_mux_reg(gpio_num) = mux_value;
 }
 
 void gpio_set_to_open_drain_output(uint8_t gpio_num) {
@@ -200,7 +201,7 @@ static inline void gpio_set_alternate_function(uint8_t gpio_num, uint8_t alterna
 }
 
 void gpio_connect_peripheral_to_output(uint8_t gpio_num, gpio_signal_t signal) {
-    gpio_set_alternate_function(gpio_num, signal.num);
+    gpio_set_alternate_function(gpio_num, signal.function);
     GPIO_FUNCn_OUT_SEL_CFG_REG reg = GPIO_FUNCn_OUT_SEL_CFG[gpio_num];
     reg.out_sel = signal.signal;
     reg.out_inv_sel = false;
@@ -210,7 +211,7 @@ void gpio_connect_peripheral_to_output(uint8_t gpio_num, gpio_signal_t signal) {
 }
 
 void gpio_connect_input_to_peripheral(uint8_t gpio_num, gpio_signal_t signal) {
-    gpio_set_alternate_function(gpio_num, signal.num);
+    gpio_set_alternate_function(gpio_num, signal.function);
     GPIO_FUNCn_IN_SEL_CFG_REG reg = GPIO_FUNCn_IN_SEL_CFG[signal.signal];
     reg.sig_in_sel = true;
     reg.in_inv_sel = false;

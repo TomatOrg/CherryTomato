@@ -1,8 +1,11 @@
 #include "spi.h"
 #include "core.h"
+#include "hardware/gpio.h"
 
 #include <util/defs.h>
 
+spi_t g_spi0 = { (void*)0x3ff43000, GPIO_SPICLK, GPIO_SPID, GPIO_SPIQ, GPIO_SPICS0 };
+spi_t g_spi1 = { (void*)0x3ff42000, GPIO_SPICLK, GPIO_SPID, GPIO_SPIQ, GPIO_SPICS0 };
 spi_t g_spi2 = { (void*)0x3FF64000, GPIO_HSPICLK, GPIO_HSPID, GPIO_HSPIQ, GPIO_HSPICS0 };
 spi_t g_spi3 = { (void*)0x3FF65000, GPIO_VSPICLK, GPIO_VSPID, GPIO_VSPIQ, GPIO_VSPICS0 };
 
@@ -36,6 +39,23 @@ typedef union {
     uint32_t packed;
 } MMIO SPI_CLOCK_REG;
 STATIC_ASSERT(sizeof(SPI_CLOCK_REG) == sizeof(uint32_t));
+
+typedef union {
+    struct {
+        uint32_t setup_time : 3;
+        uint32_t hold_time : 3;
+        uint32_t : 3;
+        uint32_t ck_out_high_mode : 3;
+        uint32_t miso_delay_mode : 2;
+        uint32_t miso_delay_num : 3;
+        uint32_t mosi_delay_mode : 2;
+        uint32_t mosi_delay_num : 3;
+        uint32_t cs_delay_mode : 2;
+        uint32_t cs_delay_num : 4;
+    };
+    uint32_t packed;
+} MMIO SPI_CTRL2_REG;
+STATIC_ASSERT(sizeof(SPI_CTRL2_REG) == sizeof(uint32_t));
 
 typedef union {
     struct {
@@ -98,8 +118,11 @@ STATIC_ASSERT(sizeof(SPI_CMD_REG) == sizeof(uint32_t));
 
 #define SPI_CMD(x)          (*(volatile SPI_CMD_REG*)(x->regs + 0x0))
 #define SPI_CTRL(x)         (*(volatile SPI_CTRL_REG*)(x->regs + 0x8))
+#define SPI_CTRL2(x)        (*(volatile SPI_CTRL2_REG*)(x->regs + 0x14))
 #define SPI_CLOCK(x)        (*(volatile SPI_CLOCK_REG*)(x->regs + 0x18))
 #define SPI_USER(x)         (*(volatile SPI_USER_REG*)(x->regs + 0x1c))
+#define SPI_USER1(x)        (*(volatile uint32_t*)(x->regs + 0x20))
+#define SPI_USER2(x)        (*(volatile uint32_t*)(x->regs + 0x24))
 #define SPI_MOSI_DLEN(x)    (*(volatile uint32_t*)(x->regs + 0x28))
 #define SPI_MISO_DLEN(x)    (*(volatile uint32_t*)(x->regs + 0x2c))
 #define SPI_W(x, n)         (*(volatile uint32_t*)(x->regs + 0x80 + (4 * (n))))
@@ -208,6 +231,8 @@ void spi_init(
     SPI_CTRL(spi).wr_bit_order = 0;
     SPI_CTRL(spi).rd_bit_order = 0;
 
+    gpio_set_high(cs);
+
     // setup the pins
     if (sck != INVALID_GPIO) {
         gpio_set_to_push_pull_output(sck);
@@ -228,6 +253,8 @@ void spi_init(
         gpio_set_to_push_pull_output(cs);
         gpio_connect_peripheral_to_output(cs, spi->cs);
     }
+
+    gpio_set_low(cs);
 }
 
 void spi_write(spi_t* spi, uint8_t* bytes, int size) {

@@ -196,9 +196,8 @@ void st7789_init() {
     delay(120000);
 
     st7789_write_command(ST7789_RAMWR);
-    static uint16_t buffer[240 * 240];
     for (int i = 0; i < 240 * 240; i++) {
-        buffer[i] = 0xa0a0;
+        target_st7789_write_byte(i);
+        target_st7789_write_byte(i >> 8);
     }
-    target_st7789_write_bytes((uint8_t*)buffer, sizeof(buffer));
 }
