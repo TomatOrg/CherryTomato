@@ -88,6 +88,9 @@ static void esp_init() {
     WSR(CCOMPARE1, 0);
     WSR(CCOMPARE2, 0);
     __isync();
+
+    // setup the interrupt vector
+    WSR(VECBASE, __vecbase);
 }
 
 /**

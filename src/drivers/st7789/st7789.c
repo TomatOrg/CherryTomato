@@ -141,18 +141,22 @@ static void st7789_init_power() {
 
 static void st7789_init_gamma() {
     static uint8_t pvgamctrl[] = {
-            0xd0, 0x00, 0x02, 0x07, 0x0a, 0x28, 0x32, 0x44, 0x42,
-            0x06, 0x0e, 0x12, 0x14, 0x17,
+        0xd0, 0x00, 0x02, 0x07, 0x0a, 0x28, 0x32, 0x44, 0x42,
+        0x06, 0x0e, 0x12, 0x14, 0x17,
     };
     st7789_write_command(ST7789_PVGAMCTRL);
-    target_st7789_write_bytes(pvgamctrl, sizeof(pvgamctrl));
+    for (int i = 0; i < sizeof(pvgamctrl); i++) {
+        target_st7789_write_byte(pvgamctrl[i]);
+    }
 
     static uint8_t nvgamctrl[] = {
-            0xd0, 0x00, 0x02, 0x07, 0x0a, 0x28, 0x31, 0x54, 0x47,
-            0x0e, 0x1c, 0x17, 0x1b, 0x1e,
+        0xd0, 0x00, 0x02, 0x07, 0x0a, 0x28, 0x31, 0x54, 0x47,
+        0x0e, 0x1c, 0x17, 0x1b, 0x1e,
     };
     st7789_write_command(ST7789_NVGAMCTRL);
-    target_st7789_write_bytes(nvgamctrl, sizeof(nvgamctrl));
+    for (int i = 0; i < sizeof(nvgamctrl); i++) {
+        target_st7789_write_byte(nvgamctrl[i]);
+    }
 }
 
 void st7789_init() {
@@ -180,7 +184,7 @@ void st7789_init() {
     target_st7789_write_byte(0x00);
     target_st7789_write_byte(0x00);
     target_st7789_write_byte(0x00);
-    target_st7789_write_byte(0xE5);
+    target_st7789_write_byte(0xEF);
 
     st7789_write_command(ST7789_RASET);
     target_st7789_write_byte(0x00);
@@ -188,16 +192,15 @@ void st7789_init() {
     target_st7789_write_byte(0x01);
     target_st7789_write_byte(0x3F);
 
+    st7789_write_command(ST7789_RAMWR);
+    for (int i = 0; i < 240 * 320; i++) {
+        target_st7789_write_byte(0);
+        target_st7789_write_byte(0);
+    }
+
     // wait a bit for commands to take effect
     delay(120000);
 
     // put the display on
     st7789_write_command(ST7789_DISPON);
-    delay(120000);
-
-    st7789_write_command(ST7789_RAMWR);
-    for (int i = 0; i < 240 * 240; i++) {
-        target_st7789_write_byte(i);
-        target_st7789_write_byte(i >> 8);
-    }
 }

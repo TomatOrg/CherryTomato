@@ -54,16 +54,16 @@ cleanup:
 static err_t init_display() {
     err_t err = NO_ERROR;
 
-    // turn on the backlight
-    gpio_enable_output(ST7789_BL, true);
-    gpio_set_high(ST7789_BL);
-
     // make sure dc is output
     gpio_enable_output(ST7789_DC, true);
     gpio_set_low(ST7789_CS);
 
     // initialize the display itself
     st7789_init();
+
+    // turn on the backlight
+    gpio_enable_output(ST7789_BL, true);
+    gpio_set_high(ST7789_BL);
 
 cleanup:
     return err;
@@ -115,4 +115,4 @@ err_t target_axp202_write_bytes(uint8_t addr, const uint8_t* bytes, size_t lengt
 void target_st7789_gpio_dc_set_high() { gpio_set_high(ST7789_DC); }
 void target_st7789_gpio_dc_set_low() { gpio_set_low(ST7789_DC); }
 void target_st7789_write_byte(uint8_t byte) { spi_write_byte(&g_spi2, byte); }
-void target_st7789_write_bytes(uint8_t* byte, size_t len) { spi_write(&g_spi2, byte, len); }
+void target_st7789_write_bytes(const uint8_t* bytes, size_t len, event_t* event) { spi_write(&g_spi2, bytes, len, event); }

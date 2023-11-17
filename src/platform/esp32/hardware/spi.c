@@ -253,48 +253,73 @@ void spi_init(
     }
 }
 
-void spi_write(spi_t* spi, uint8_t* bytes, int size) {
-    // spit into chunks
-//    for (; size > 0; size -= 64, bytes += 64) {
-//        int len = MIN(64, size) - 1;
-//        SPI_MOSI_DLEN(spi) = len * 8 - 1;
-//
-//        // write the data into the memory
-//        xthal_memcpy((void*)&SPI_W(spi, 0), bytes, ALIGN_DOWN(len, 4));
-//
-//        // copy the unaligned data
-//        uint32_t word = 0;
-//        int unaligned = (len % 4) != 0;
-//        switch (unaligned) {
-//            case 0: continue;
-//            case 1: __builtin_memcpy(&word, bytes, 1); break;
-//            case 2: __builtin_memcpy(&word, bytes, 2); break;
-//            case 3: __builtin_memcpy(&word, bytes, 3); break;
-//        }
-//        SPI_W(spi, len / 4) = word;
-//
-//        // flush
-//        SPI_CMD(spi).usr = 1;
-//        while (SPI_CMD(spi).usr);
-//    }
+/**
+ * Perform an efficient blocking write
+ */
+static void spi_write_blocking(spi_t* spi, const uint8_t* buf, size_t len) {
+    const uint32_t* data = (uint32_t*)buf;
 
-    for (int i = 0; i < size; i++) {
-        spi_write_byte(spi, bytes[i]);
+    // if we have more than 63 bytes then go into a loop
+    // doing a nice big upload
+    if (len > 63) {
+        // set the length of a 64 byte chunk
+        SPI_MOSI_DLEN(spi) = 511;
+        while (len > 63) {
+            // wait for the bus to be empty
+            while (SPI_CMD(spi).usr);
+
+            // fill all the data we can
+            SPI_W(spi, 0) = *data++;
+            SPI_W(spi, 1) = *data++;
+            SPI_W(spi, 2) = *data++;
+            SPI_W(spi, 3) = *data++;
+            SPI_W(spi, 4) = *data++;
+            SPI_W(spi, 5) = *data++;
+            SPI_W(spi, 6) = *data++;
+            SPI_W(spi, 7) = *data++;
+            SPI_W(spi, 8) = *data++;
+            SPI_W(spi, 9) = *data++;
+            SPI_W(spi, 10) = *data++;
+            SPI_W(spi, 11) = *data++;
+            SPI_W(spi, 12) = *data++;
+            SPI_W(spi, 13) = *data++;
+            SPI_W(spi, 14) = *data++;
+            SPI_W(spi, 15) = *data++;
+
+            // signal the start of the command
+            SPI_CMD(spi).usr = 1;
+            len -= 64;
+        }
+    }
+
+    // if we have more to write then flush it
+    if (len != 0) {
+        // wait for the bus to be empty
+        while (SPI_CMD(spi).usr);
+
+        // set the length for the amount left
+        SPI_MOSI_DLEN(spi) = (len * 8) - 1;
+
+        // write at a dword granularity
+        // NOTE: we are technically possibly going over the limit
+        //       but that is fine, we will just have some chunk inside
+        //       of the spi buffer but we will not actually send it
+        for (int i = 0; i <= len; i += 4) {
+            SPI_W(spi, i) = *data++;
+        }
+
+        // signal the chunk sending
+        SPI_CMD(spi).usr = 1;
     }
 }
 
-void spi_write_aligned(spi_t* spi, uint8_t* bytes, int size) {
-    // spit into chunks
-    for (; size > 0; size -= 64, bytes += 64) {
-        int len = MIN(64, size) - 1;
-        SPI_MOSI_DLEN(spi) = len * 8 - 1;
+void spi_write(spi_t* spi, const uint8_t* bytes, size_t len, event_t* event) {
+    // blocking
+    spi_write_blocking(spi, bytes, len);
 
-        // write the data into the memory
-        xthal_memcpy((void*)&SPI_W(spi, 0), bytes, len);
-
-        // flush
-        SPI_CMD(spi).usr = 1;
-        while (SPI_CMD(spi).usr);
+    if (event != NULL) {
+        // signal we are done
+        signal_event(event);
     }
 }
 
