@@ -5,6 +5,7 @@
 #
 # The target to compile for:
 #	- ttgo-twatch-2020-v2
+#	- um
 #
 TARGET 			?= ttgo-twatch-2020-v2
 
@@ -17,12 +18,7 @@ OUT_DIR			:= out
 # The compiler flags
 CFLAGS 			:= -Os -g -static
 CFLAGS 			+= -Wall -Werror
-CFLAGS 			+= -nostartfiles -nostdlib -nodefaultlibs
-CFLAGS 			+= -fno-pie -fno-pic -ffreestanding
 CFLAGS 			+= -Wno-unused-label -Wno-unused-function
-CFLAGS 			+= -fno-stack-check -fno-stack-protector -fomit-frame-pointer
-CFLAGS 			+= -flto -fuse-linker-plugin -fno-fat-lto-objects
-CFLAGS 			+= -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
 CFLAGS 			+= -fstrict-volatile-bitfields
 CFLAGS 			+= -Isrc
 CFLAGS 			+= -DPRINTF_SUPPORT_DECIMAL_SPECIFIERS=0

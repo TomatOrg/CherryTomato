@@ -6,6 +6,12 @@ CFLAGS 	+= -mconst16
 CFLAGS 	+= -mforce-no-pic
 CFLAGS 	+= -mtarget-align
 CFLAGS 	+= -mlongcalls
+CFLAGS 	+= -fno-pie -fno-pic -ffreestanding
+CFLAGS 	+= -nostartfiles -nostdlib -nodefaultlibs
+CFLAGS 	+= -fno-stack-check -fno-stack-protector -fomit-frame-pointer
+CFLAGS 	+= -flto -fuse-linker-plugin -fno-fat-lto-objects
+CFLAGS 	+= -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
+
 
 SRCS 	+= $(ARCH_DIR)/vectors.c
 SRCS 	+= $(ARCH_DIR)/vectors.S
