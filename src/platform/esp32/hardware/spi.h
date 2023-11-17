@@ -5,10 +5,10 @@
 
 typedef struct spi {
     void* regs;
-    gpio_signal_t sclk;
-    gpio_signal_t mosi;
-    gpio_signal_t miso;
-    gpio_signal_t cs;
+    uint8_t sclk;
+    uint8_t mosi;
+    uint8_t miso;
+    uint8_t cs;
 } spi_t;
 
 // the available spi devices

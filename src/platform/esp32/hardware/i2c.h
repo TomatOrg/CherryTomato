@@ -8,8 +8,8 @@
 
 typedef struct i2c {
     void* regs;
-    gpio_signal_t sda;
-    gpio_signal_t scl;
+    uint8_t sda;
+    uint8_t scl;
     uint8_t cmd_index;
 } i2c_t;
 

@@ -231,8 +231,6 @@ void spi_init(
     SPI_CTRL(spi).wr_bit_order = 0;
     SPI_CTRL(spi).rd_bit_order = 0;
 
-    gpio_set_high(cs);
-
     // setup the pins
     if (sck != INVALID_GPIO) {
         gpio_set_to_push_pull_output(sck);
@@ -253,8 +251,6 @@ void spi_init(
         gpio_set_to_push_pull_output(cs);
         gpio_connect_peripheral_to_output(cs, spi->cs);
     }
-
-    gpio_set_low(cs);
 }
 
 void spi_write(spi_t* spi, uint8_t* bytes, int size) {

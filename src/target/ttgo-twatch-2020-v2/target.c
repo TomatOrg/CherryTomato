@@ -91,7 +91,7 @@ void target_entry(void) {
     // display spi
     spi_init(&g_spi2,
              ST7789_SCLK, ST7789_MOSI, INVALID_GPIO, ST7789_CS,
-             8 * 1000 * 1000, SPI_DATA_MODE0);
+             80 * 1000 * 1000, SPI_DATA_MODE0);
 
     // now probe all the ttgo hardware
     LOG_TRACE("Initializing drivers");
@@ -114,5 +114,5 @@ err_t target_axp202_write_bytes(uint8_t addr, const uint8_t* bytes, size_t lengt
 
 void target_st7789_gpio_dc_set_high() { gpio_set_high(ST7789_DC); }
 void target_st7789_gpio_dc_set_low() { gpio_set_low(ST7789_DC); }
-void target_st7789_write_byte(uint8_t byte) { spi_write_byte(&g_spi3, byte); }
-void target_st7789_write_bytes(uint8_t* byte, size_t len) { spi_write(&g_spi3, byte, len); }
+void target_st7789_write_byte(uint8_t byte) { spi_write_byte(&g_spi2, byte); }
+void target_st7789_write_bytes(uint8_t* byte, size_t len) { spi_write(&g_spi2, byte, len); }

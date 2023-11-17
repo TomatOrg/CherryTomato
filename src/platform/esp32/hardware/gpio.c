@@ -200,21 +200,19 @@ static inline void gpio_set_alternate_function(uint8_t gpio_num, uint8_t alterna
     get_io_mux_reg(gpio_num)->mcu_sel = alternate;
 }
 
-void gpio_connect_peripheral_to_output(uint8_t gpio_num, gpio_signal_t signal) {
-    gpio_set_alternate_function(gpio_num, signal.function);
+void gpio_connect_peripheral_to_output(uint8_t gpio_num, uint8_t signal) {
     GPIO_FUNCn_OUT_SEL_CFG_REG reg = GPIO_FUNCn_OUT_SEL_CFG[gpio_num];
-    reg.out_sel = signal.signal;
+    reg.out_sel = signal;
     reg.out_inv_sel = false;
     reg.oen_sel = false;
     reg.oen_inv_sel = false;
     GPIO_FUNCn_OUT_SEL_CFG[gpio_num] = reg;
 }
 
-void gpio_connect_input_to_peripheral(uint8_t gpio_num, gpio_signal_t signal) {
-    gpio_set_alternate_function(gpio_num, signal.function);
-    GPIO_FUNCn_IN_SEL_CFG_REG reg = GPIO_FUNCn_IN_SEL_CFG[signal.signal];
+void gpio_connect_input_to_peripheral(uint8_t gpio_num, uint8_t signal) {
+    GPIO_FUNCn_IN_SEL_CFG_REG reg = GPIO_FUNCn_IN_SEL_CFG[signal];
     reg.sig_in_sel = true;
     reg.in_inv_sel = false;
     reg.in_sel = gpio_num;
-    GPIO_FUNCn_IN_SEL_CFG[signal.signal] = reg;
+    GPIO_FUNCn_IN_SEL_CFG[signal] = reg;
 }
