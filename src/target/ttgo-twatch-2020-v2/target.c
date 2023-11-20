@@ -5,6 +5,7 @@
 #include "hardware/dport.h"
 #include "hardware/spi.h"
 #include "drivers/st7789/st7789.h"
+#include "drivers/ft6x06/ft6x06.h"
 #include "event/delay.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,6 +70,15 @@ cleanup:
     return err;
 }
 
+static err_t init_touchscreen() {
+    err_t err = NO_ERROR;
+
+    ft6x06_init();
+
+cleanup:
+    return err;
+}
+
 void target_entry(void) {
     err_t err = NO_ERROR;
 
@@ -97,6 +107,17 @@ void target_entry(void) {
     LOG_TRACE("Initializing drivers");
     CHECK_AND_RETHROW(init_power());
     CHECK_AND_RETHROW(init_display());
+    CHECK_AND_RETHROW(init_touchscreen());
+
+    while (1) {
+        delay(1000*16);
+        bool pressed;
+        uint16_t x, y;
+        CHECK_AND_RETHROW(ft6x06_touch(&pressed, &x, &y));
+        if (pressed) {
+            st7789_fillrect(0xFFFF, x, 320-y, 8, 8);
+        }
+    }
 
 cleanup:
     if (IS_ERROR(err)) {
@@ -111,6 +132,9 @@ cleanup:
 
 err_t target_axp202_read_bytes(uint8_t addr, uint8_t* bytes, size_t length) { return i2c_master_read(&g_i2c0, addr, bytes, length); }
 err_t target_axp202_write_bytes(uint8_t addr, const uint8_t* bytes, size_t length) { return i2c_master_write(&g_i2c0, addr, bytes, length); }
+
+err_t target_ft6x06_read_bytes(uint8_t addr, uint8_t* bytes, size_t length) { return i2c_master_read(&g_i2c0, addr, bytes, length); }
+err_t target_ft6x06_write_bytes(uint8_t addr, const uint8_t* bytes, size_t length) { return i2c_master_write(&g_i2c0, addr, bytes, length); }
 
 void target_st7789_gpio_dc_set_high() { gpio_set_high(ST7789_DC); }
 void target_st7789_gpio_dc_set_low() { gpio_set_low(ST7789_DC); }

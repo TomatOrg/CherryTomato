@@ -204,3 +204,26 @@ void st7789_init() {
     // put the display on
     st7789_write_command(ST7789_DISPON);
 }
+
+void st7789_fillrect(uint16_t col, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    uint16_t xend = x + w - 1;
+    uint16_t yend = y + h - 1;
+
+    st7789_write_command(ST7789_CASET);
+    target_st7789_write_byte(x >> 8);
+    target_st7789_write_byte(x & 0xFF);
+    target_st7789_write_byte(xend >> 8);
+    target_st7789_write_byte(xend & 0xFF);
+
+    st7789_write_command(ST7789_RASET);
+    target_st7789_write_byte(y >> 8);
+    target_st7789_write_byte(y & 0xFF);
+    target_st7789_write_byte(yend >> 8);
+    target_st7789_write_byte(yend & 0xFF);
+
+    st7789_write_command(ST7789_RAMWR);
+    for (int i = 0; i < w * h; i++) {
+        target_st7789_write_byte(col >> 8);
+        target_st7789_write_byte(col & 0xFF);
+    }
+}
