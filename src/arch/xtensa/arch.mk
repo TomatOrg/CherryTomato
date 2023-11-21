@@ -15,6 +15,8 @@ CFLAGS 	+= -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
 
 SRCS 	+= $(ARCH_DIR)/vectors.c
 SRCS 	+= $(ARCH_DIR)/vectors.S
+SRCS 	+= $(ARCH_DIR)/builtins.c
+SRCS 	+= $(ARCH_DIR)/builtins.S
 
 fetch-toolchain:
 	mkdir -p $(OUT_DIR)/toolchain
