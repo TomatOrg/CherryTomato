@@ -10,7 +10,7 @@ void screendemo() {
         uint16_t x, y;
         CHECK_AND_RETHROW(ft6x06_touch(&pressed, &x, &y));
         if (pressed) {
-            st7789_fillrect(0xFFFF, x, 320-y, 8, 8);
+            st7789_fillrect(0, x, 320-y, 8, 8);
         }
         delay(1000*16);
     }

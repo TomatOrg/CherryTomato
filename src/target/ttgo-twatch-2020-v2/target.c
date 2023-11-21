@@ -15,6 +15,9 @@
 #define SENSOR_SDA  21
 #define SENSOR_SCL  22
 
+#define TOUCH_SDA   23
+#define TOUCH_SCL   32
+
 #define ST7789_MOSI 19
 #define ST7789_SCLK 18
 #define ST7789_DC   27
@@ -35,6 +38,7 @@ static err_t init_power() {
     // make sure its off
     CHECK_AND_RETHROW(axp202_set_power_output(AXP202_CHANNEL_LDO3, false));
     CHECK_AND_RETHROW(axp202_set_power_output(AXP202_CHANNEL_LDO2, false));
+    CHECK_AND_RETHROW(axp202_set_power_output(AXP202_CHANNEL_EXTEN, false));
 
     // Set the backlight and st7789 voltage to 3.3
     CHECK_AND_RETHROW(axp202_set_ldo2_voltage(3300));
@@ -73,6 +77,12 @@ cleanup:
 static err_t init_touchscreen() {
     err_t err = NO_ERROR;
 
+    axp202_set_power_output(AXP202_CHANNEL_EXTEN, true);
+    delay(10000);
+    axp202_set_power_output(AXP202_CHANNEL_EXTEN, false);
+    delay(8000);
+    axp202_set_power_output(AXP202_CHANNEL_EXTEN, true);
+
     ft6x06_init();
 
 cleanup:
@@ -91,12 +101,19 @@ void target_entry(void) {
     DPORT_PERIP_CLK_EN.i2c_ext0 = 1;
     DPORT_PERIP_RST_EN.i2c_ext0 = 0;
 
+    DPORT_PERIP_RST_EN.i2c_ext1 = 1;
+    DPORT_PERIP_CLK_EN.i2c_ext1 = 1;
+    DPORT_PERIP_RST_EN.i2c_ext1 = 0;
+
     DPORT_PERIP_RST_EN.spi2 = 1;
     DPORT_PERIP_CLK_EN.spi2 = 1;
     DPORT_PERIP_RST_EN.spi2 = 0;
 
     // sensor i2c
     i2c_init(&g_i2c0, SENSOR_SDA, SENSOR_SCL, 100 * 1000);
+
+    // touch i2c
+    i2c_init(&g_i2c1, TOUCH_SDA, TOUCH_SCL, 100 * 1000);
 
     // display spi
     spi_init(&g_spi2,
@@ -108,16 +125,6 @@ void target_entry(void) {
     CHECK_AND_RETHROW(init_power());
     CHECK_AND_RETHROW(init_display());
     CHECK_AND_RETHROW(init_touchscreen());
-
-    while (1) {
-        delay(1000*16);
-        bool pressed;
-        uint16_t x, y;
-        CHECK_AND_RETHROW(ft6x06_touch(&pressed, &x, &y));
-        if (pressed) {
-            st7789_fillrect(0xFFFF, x, 320-y, 8, 8);
-        }
-    }
 
 cleanup:
     if (IS_ERROR(err)) {
@@ -133,8 +140,8 @@ cleanup:
 err_t target_axp202_read_bytes(uint8_t addr, uint8_t* bytes, size_t length) { return i2c_master_read(&g_i2c0, addr, bytes, length); }
 err_t target_axp202_write_bytes(uint8_t addr, const uint8_t* bytes, size_t length) { return i2c_master_write(&g_i2c0, addr, bytes, length); }
 
-err_t target_ft6x06_read_bytes(uint8_t addr, uint8_t* bytes, size_t length) { return i2c_master_read(&g_i2c0, addr, bytes, length); }
-err_t target_ft6x06_write_bytes(uint8_t addr, const uint8_t* bytes, size_t length) { return i2c_master_write(&g_i2c0, addr, bytes, length); }
+err_t target_ft6x06_read_bytes(uint8_t addr, uint8_t* bytes, size_t length) { return i2c_master_read(&g_i2c1, addr, bytes, length); }
+err_t target_ft6x06_write_bytes(uint8_t addr, const uint8_t* bytes, size_t length) { return i2c_master_write(&g_i2c1, addr, bytes, length); }
 
 void target_st7789_gpio_dc_set_high() { gpio_set_high(ST7789_DC); }
 void target_st7789_gpio_dc_set_low() { gpio_set_low(ST7789_DC); }

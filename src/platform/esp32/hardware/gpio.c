@@ -81,15 +81,28 @@ static volatile IO_MUX_x* get_io_mux_reg(int gpio) {
     uintptr_t addr = -1;
     switch (gpio) {
         case 0: addr = 0x3FF49044; break;
+        case 2: addr = 0x3FF49040; break;
+        case 4: addr = 0x3FF49048; break;
         case 5: addr = 0x3FF4906C; break;
+        case 16: addr = 0x3FF4904C; break;
+        case 17: addr = 0x3FF49050; break;
         case 18: addr = 0x3FF49070; break;
         case 19: addr = 0x3FF49074; break;
         case 20: addr = 0x3FF49078; break;
         case 21: addr = 0x3FF4907C; break;
         case 22: addr = 0x3FF49080; break;
+        case 23: addr = 0x3FF4908C; break;
         case 25: addr = 0x3FF49024; break;
         case 26: addr = 0x3FF49028; break;
         case 27: addr = 0x3FF4902C; break;
+        case 32: addr = 0x3FF4901C; break;
+        case 33: addr = 0x3FF49020; break;
+        case 34: addr = 0x3FF49014; break;
+        case 35: addr = 0x3FF49018; break;
+        case 36: addr = 0x3FF49004; break;
+        case 37: addr = 0x3FF49008; break;
+        case 38: addr = 0x3FF4900C; break;
+        case 39: addr = 0x3FF49010; break;
         default: ASSERT(!"Invalid IOMUX reg"); break;
     }
     return (volatile IO_MUX_x*)addr;

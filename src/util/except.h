@@ -38,5 +38,6 @@ typedef enum err {
     do { \
         if (!(expr)) { \
             LOG_ERROR("Assert `" #expr "` failed!"); \
+            while(1); \
         } \
     } while(0)
