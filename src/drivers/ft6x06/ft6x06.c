@@ -89,6 +89,7 @@
 
 /* Current operating mode the FT6X06 system is in (R) */
 #define FT6X06_STATE_REG            0xBCU
+
 static err_t ft6x06_read(uint8_t reg, uint8_t* data, size_t n) {
     err_t err = NO_ERROR;
 
@@ -121,14 +122,18 @@ cleanup:
 err_t ft6x06_touch(bool* touched, uint16_t *x, uint16_t *y) {
     err_t err = NO_ERROR;
 
-    uint8_t status;
-    ft6x06_read(FT6X06_TD_STAT_REG, &status, 1);
-    if (status == 0) { *touched = false; return NO_ERROR; }
+    uint8_t status[5];
+    ft6x06_read(FT6X06_TD_STAT_REG, status, 5);
+
+    if (status[0] == 0 || status[0] > 2) {
+        *touched = false;
+        goto cleanup;
+    }
+
     *touched = true;
-    uint8_t p1_data[4];
-    CHECK_AND_RETHROW(ft6x06_read(FT6X06_P1_XH_REG, p1_data, 4));
-    *x = (p1_data[0] << 8) | p1_data[1];
-    *y = (p1_data[2] << 8) | p1_data[3];
+
+    *x = (status[1] << 8) | status[2];
+    *y = (status[3] << 8) | status[4];
 
 cleanup:
     return err;

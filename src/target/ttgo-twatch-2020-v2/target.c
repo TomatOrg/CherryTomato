@@ -123,8 +123,8 @@ void target_entry(void) {
     // now probe all the ttgo hardware
     LOG_TRACE("Initializing drivers");
     CHECK_AND_RETHROW(init_power());
-    CHECK_AND_RETHROW(init_display());
     CHECK_AND_RETHROW(init_touchscreen());
+    CHECK_AND_RETHROW(init_display());
 
 cleanup:
     if (IS_ERROR(err)) {
