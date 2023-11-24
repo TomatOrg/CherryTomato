@@ -63,7 +63,7 @@ void putchar_(char c) {
  */
 static void esp_init() {
     // setup illegal regions as illegal
-    const uint32_t illegal_regions[] = {
+    static const uint32_t illegal_regions[] = {
         0x00000000,
         0x80000000,
         0xa0000000,
@@ -114,7 +114,11 @@ void entry() {
     };
     DPORT_PERIP_CLK_EN = clk_en;
 
-    // TODO: setup timer
+    // setup a clean PS
+    WSR(PS, BIT18);
+
+    // enable interrupts
+    enable_interrupts();
 
     // call the target
     target_entry();

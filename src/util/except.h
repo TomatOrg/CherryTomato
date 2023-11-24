@@ -37,7 +37,7 @@ typedef enum err {
 #define ASSERT(expr) \
     do { \
         if (!(expr)) { \
-            LOG_ERROR("Assert `" #expr "` failed!"); \
+            LOG_CRITICAL("Assert `" #expr "` failed!"); \
             while(1); \
         } \
     } while(0)

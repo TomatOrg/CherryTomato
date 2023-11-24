@@ -28,6 +28,7 @@ qemu: $(QEMU) $(BIN_DIR)/firmware.bin
 	$(QEMU) \
 		 --trace "*i2c*" -machine esp32 \
 		-serial stdio \
+		-monitor telnet:localhost:1235,server,nowait \
 		-drive file=$(OUT_DIR)/image.bin.full,if=mtd,format=raw
 
 fetch-qemu:

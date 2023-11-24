@@ -1,5 +1,5 @@
 
-#include "exception_regs.h"
+#include "frame_offsets.h"
 
 .section .text
 
@@ -31,7 +31,7 @@
 
 .global __vecbase
 
-.align 64
+.align 0x1000
 __vecbase:
 window_overflow_4:
 /* window overflow 4 - 0x00 */
@@ -55,9 +55,9 @@ window_overflow_8:
 /* windows overflow 8 - 0x80 */
     s32e	a0, a9, -16
     l32e	a0, a1, -12
+    s32e	a2, a9,  -8
     s32e	a1, a9, -12
-    s32e	a2, a9, -8
-    s32e	a3, a9, -4
+    s32e	a3, a9,  -4
     s32e	a4, a0, -32
     s32e	a5, a0, -28
     s32e	a6, a0, -24
@@ -67,12 +67,12 @@ window_overflow_8:
 .align 64
 window_underflow_8:
 /* windows underflow 8 - 0xc0 */
-    l32e	a0, a9, -16
     l32e	a1, a9, -12
-    l32e	a2, a9, -8
+    l32e	a0, a9, -16
     l32e	a7, a1, -12
-    l32e	a3, a9, -4
+    l32e	a2, a9,  -8
     l32e	a4, a7, -32
+    l32e	a3, a9,  -4
     l32e	a5, a7, -28
     l32e	a6, a7, -24
     l32e	a7, a7, -20
@@ -81,35 +81,35 @@ window_underflow_8:
 .align 64
 window_overflow_12:
 /* windows overflow 12 - 0x100 */
-    s32e	a0, a13, -16
-    l32e	a0, a1, -12
-    s32e	a1, a13, -12
-    s32e	a2, a13, -8
-    s32e	a3, a13, -4
-    s32e	a4, a0, -48
-    s32e	a5, a0, -44
-    s32e	a6, a0, -40
-    s32e	a7, a0, -36
-    s32e	a8, a0, -32
-    s32e	a9, a0, -28
-    s32e	a10, a0, -24
-    s32e	a11, a0, -20
+    s32e	a0,  a13, -16
+    l32e	a0,  a1,  -12
+    s32e	a1,  a13, -12
+    s32e	a2,  a13,  -8
+    s32e	a3,  a13,  -4
+    s32e	a4,  a0,  -48
+    s32e	a5,  a0,  -44
+    s32e	a6,  a0,  -40
+    s32e	a7,  a0,  -36
+    s32e	a8,  a0,  -32
+    s32e	a9,  a0,  -28
+    s32e	a10, a0,  -24
+    s32e	a11, a0,  -20
     rfwo
 
 .align 64
 window_underflow_12:
 /* windows underflow 12 - 0x140 */
-    l32e	a0, a13, -16
-    l32e	a1, a13, -12
-    l32e	a2, a13, -8
-    l32e	a11, a1, -12
-    l32e	a3, a13, -4
-    l32e	a4, a11, -48
-    l32e	a5, a11, -44
-    l32e	a6, a11, -40
-    l32e	a7, a11, -36
-    l32e	a8, a11, -32
-    l32e	a9, a11, -28
+    l32e	a1,  a13, -12
+    l32e	a0,  a13, -16
+    l32e	a11, a1,  -12
+    l32e	a2,  a13,  -8
+    l32e	a4,  a11, -48
+    l32e	a8,  a11, -32
+    l32e	a3,  a13,  -4
+    l32e	a5,  a11, -44
+    l32e	a6,  a11, -40
+    l32e	a7,  a11, -36
+    l32e	a9,  a11, -28
     l32e	a10, a11, -24
     l32e	a11, a11, -20
     rfwu
@@ -119,34 +119,42 @@ window_underflow_12:
  **********************************************************************************************************************/
 
 .align 64
+.type level_2_vector,@function
+level_2_vector:
 /* interrupt level 2 - 0x180 */
-rsr.excsave2 a0
-rfi 2
+    j level_2_vector
+    rfi 2
+.size level_2_vector, . - level_2_vector
 
 .align 64
+level_3_vector:
 /* interrupt level 3 - 0x1c0 */
-rsr.excsave3 a0
-rfi 3
+    j level_3_vector
+    rfi 3
 
 .align 64
+level_4_vector:
 /* interrupt level 4 - 0x200 */
-rsr.excsave4 a0
-rfi 4
+    j level_4_vector
+    rfi 4
 
 .align 64
+level_5_vector:
 /* interrupt level 5 - 0x240 */
-rsr.excsave5 a0
-rfi 5
+    j level_5_vector
+    rfi 5
 
 .align 64
+debug_vector:
 /* interrupt level 6 (debug) - 0x280 */
-rsr.excsave6 a0
-rfi 6
+    j debug_vector
+    rfi 6
 
 .align 64
+nmi_vector:
 /* interrupt level 7 (nmi) - 0x2c0 */
-rsr.excsave7 a0
-rfi 7
+    j nmi_vector
+    rfi 7
 
 /***********************************************************************************************************************
  * Normal exceptions
@@ -155,460 +163,209 @@ rfi 7
 /*
  * kernel exception - 0x300
  */
-.type  kernel_exception,@function
 .align 64
+.type kernel_exception,@function
 kernel_exception:
-    // save the original a0 and a1 in two scratch
-    // registers, specifically a1 and a0
-    wsr.excsave1 a1
-    wsr.depc a0
+    // save a3 and a2, w ecan use depc because we don't expect
+    // a double fault to happen, and if it happens we will not
+    // restore execution anyways
+    wsr.excsave1 a2
 
-    // allocate the task_regs_t for the current exception
-    addi sp, sp, -EXCEPTION_REGS_SIZE
+    // allocate the interrupt frame
+    addi a2, a1, -16 - IFRAME_SIZE
 
-    // now save the original a0-a2, we need
-    // them to do stuff
-    rsr.depc a0
-    s32i a0, sp, EXCEPTION_REGS_AR(0)
-    rsr.excsave1 a0
-    s32i a0, sp, EXCEPTION_REGS_AR(1)
-    s32i a2, sp, EXCEPTION_REGS_AR(2)
-    s32i a3, sp, EXCEPTION_REGS_AR(3)
+    // save a0 to the iframe
+    s32i a0, a2, IFRAME_A(0)
 
-    //
-    // we are going to start by loading a fast handler, which
-    // could also be a common slow handler, the idea is that
-    // the fast handler can take a quick path of handling some
-    // of the exception causes.
-    //
-    // it is safe to use exccause as index since it is only 6 bits
-    // meaning that we only haev a max of 64 entries
-    //
-    rsr.exccause a0
-    movi a2, g_fast_interrupts
-    addx4 a0, a0, a2
-    l32i a0, a0, 0
-
-    // jump to it
-    jx a0
+    // just call the common exception handler, we will dispatch
+    // the correct handler from there
+    j dispatch_kernel_exception
 .size kernel_exception, . - kernel_exception
 
 /*
  * user exception - 0x340
  */
-.type  user_exception,@function
 .align 64
 user_exception:
     rfe
-.size user_exception, . - user_exception
 
 .align 64
 /* double exception - 0x380 */
-rfde
+    rfde
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The actual exception handlers
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/**
- * this is going to save the full context of the caller
- * to the stack, this should be done if we are going to
- * call into C code to do stuff instead of doing it
- * with assembly and we know what we touch
- *
- * assume that original a0 and a1 are stored and that
- * sp has a valid kernel stack for us to use
- */
-.type save_full_interrupt_context,@function
-.align  4
-.literal_position
-.align  4
-save_full_interrupt_context:
-    // save ps and pc
-    rsr.epc1 a2
-    s32i a2, sp, EXCEPTION_REGS_PC
-    rsr.ps a2
-    s32i a2, sp, EXCEPTION_REGS_PS
+.type dispatch_kernel_exception,@function
+dispatch_kernel_exception:
+    // save a1, a2, a3 and set SP
+    rsr.excsave1 a0
+    s32i a1, a2, IFRAME_A(1)
+    s32i a0, a2, IFRAME_A(2)
+    s32i a3, a2, IFRAME_A(3)
+    mov a1, a2
 
-    // save sar
+    // save SAR
     rsr.sar a2
-    s32i a2, sp, EXCEPTION_REGS_SAR
+    s32i a2, a1, IFRAME_SAR
 
-    // save loop regs
-    rsr.lbeg a2
-    s32i a2, sp, EXCEPTION_REGS_LBEG
-    rsr.lend a2
-    s32i a2, sp, EXCEPTION_REGS_LEND
-    rsr.lcount a2
-    s32i a2, sp, EXCEPTION_REGS_LCOUNT
-
-    //
-    // save the orig window base/start
-    //
+    // prepare for spilling the entire frame, we need to have the window be
+    // in a position where the window start is at bit0
     rsr.windowbase a2
     rsr.windowstart a3
-    s32i a2, sp, EXCEPTION_REGS_WINDOWBASE
-    s32i a3, sp, EXCEPTION_REGS_WINDOWSTART
-
-    //
-    // spill all the registers
-    //
-    // this may seem complex but is actually really simple:
-    //
-    // 1. we are going to start by aligning our windowstart with the windowbase,
-    //    by doing a rotr16 on it, this will make it easier to figure out which
-    //    frames need to be saved later on
-    // 2. save a4-a15, if we detect that in one of the 3 ranges we have a live range
-    //    we are going to skip saving the rest and use the spill loop (stage 3)
-    // 3. we are going to figure how much frames should be kept, that is done in couple steps:
-    //       a. clear the first bit representing the current range
-    //       b. keep only the first set bit
-    //       c. count trailing zeros + 1
-    //    that essentially gives us the depth of the register stack as it is
-    // 4. go in a loop and rotate the window backwards, saving 4 registers at a time
-    // 5. restore the window base/start
-    //
-    // We are also going to store the lower 4 bits of the rotated window and
-    // the amount of frames that need to be saved in a special windowmask entry
-    // in our task_regs_t. (will be saved as 2 16bit values)
-    //
-
-    // save the windowstart for later use
-    wsr.excsave1 a3
-
-    // 1. rotate the windowstart, we also going to use SAR
-    //    as means to actually save the windowbase for when
-    //    we want to restore it later on after the spilling
     ssr a2
-    slli a2, a3, 32 - 16
+    slli a2, a3, 16
     src a2, a3, a2
-    srli a2, a2, 32 - 16
-    s16i a2, sp, EXCEPTION_REGS_WINDOWMASK
+    srli a2, a2, 16
+    s32i a2, a1, IFRAME_WINDOWMASK
 
-    // 2. save live registers, we are going to branch out
-    //    to full spill if there is an overflow
+    // save only the live window-frame
+    bbsi a2, 1, 1f
+    s32i a4, a1, IFRAME_A(4)
+    s32i a5, a1, IFRAME_A(5)
+    s32i a6, a1, IFRAME_A(6)
+    s32i a7, a1, IFRAME_A(7)
+    bbsi a2, 2, 1f
+    s32i a8, a1, IFRAME_A(8)
+    s32i a9, a1, IFRAME_A(9)
+    s32i a10, a1, IFRAME_A(10)
+    s32i a11, a1, IFRAME_A(11)
+    bbsi a2, 3, 1f
+    s32i a12, a1, IFRAME_A(12)
+    s32i a13, a1, IFRAME_A(13)
+    s32i a14, a1, IFRAME_A(14)
+    s32i a15, a1, IFRAME_A(15)
 
-    bbsi a2, 1, .full_spill
-    s32i a4, sp, EXCEPTION_REGS_AR(4)
-    s32i a5, sp, EXCEPTION_REGS_AR(5)
-    s32i a6, sp, EXCEPTION_REGS_AR(6)
-    s32i a7, sp, EXCEPTION_REGS_AR(7)
+    bnei a2, 1, 1f
 
-    bbsi a2, 2, .full_spill
-    s32i a8, sp, EXCEPTION_REGS_AR(8)
-    s32i a9, sp, EXCEPTION_REGS_AR(9)
-    s32i a10, sp, EXCEPTION_REGS_AR(10)
-    s32i a11, sp, EXCEPTION_REGS_AR(11)
+    // we need to emulate a movsp in order
+    // to keep the exception stack contig for spilling
+    // the window properly
+    l32i a3, a1, IFRAME_SIZE
+    l32i a0, a1, IFRAME_SIZE + 4
+    s32e a3, a1, -16
+    s32e a0, a1, -12
 
-    bbsi a2, 3, .full_spill
-    s32i a12, sp, EXCEPTION_REGS_AR(12)
-    s32i a13, sp, EXCEPTION_REGS_AR(13)
-    s32i a14, sp, EXCEPTION_REGS_AR(14)
-    s32i a15, sp, EXCEPTION_REGS_AR(15)
+1:
+    // restore the saved a0
+    l32i a0, a1, IFRAME_A(0)
 
-    // lastly check if there are even more frames, if not we
-    // don't need to spill anything else
-    bnei a2, 1, .full_spill
-    j .done_spill
+    // save the pc
+    rsr.epc1 a2
+    s32i a2, a1, IFRAME_PC
 
-.full_spill:
-    //
-    // 3. figure out how many frames we need to keep
-    //
+    // zero and save the lcount
+    movi a2, 0
+    xsr a2, lcount
+    s32i a2, a1, IFRAME_LCOUNT
 
-    // a. turn off the first bit, we can assume that the first bit
-    //    is always set, so just subtracting one will work fine
-    addi a3, a2, -1
+    // save the ps
+    rsr.ps a3
+    s32i a3, a1, IFRAME_PS
 
-    // b. negate the number, and then and it with the version that does have
-    //    the first bit set, this will make sure that the only bit that stays
-    //    is the first one, if it was set, especially after we cleared it in
-    //    the previous instruction
-    neg a3, a3
-    and a3, a3, a2
+    // save the exccause
+    rsr.exccause a2
+    s32i a2, a1, IFRAME_EXCCAUSE
 
-    // c. count trailing zeros + 1, we have the NSAU instruction
-    //    that does exactly that, we just need to subtract 15
-    //    since we want the +1 and ws is only 16 bits, so we don't
-    //    need that big of a number
-    nsau a2, a3
-    addi a2, a2, -15
+    // restore the return address for better stack tracing
+    // we want this before enabling interrupts again
+    l32i a0, a1, IFRAME_A(0)
 
-    // store the window frame count in the windowsize
-    s16i a2, sp, EXCEPTION_REGS_WINDOWSIZE
-
-    // 4. we are now ready to the rest of the spilling
-    //    because we are going backwards we also need to do
-    //    the storing backwards, so the register window in
-    //    memory will make sense, so we store from the end
-    //    and each iteration move the base backwards so it
-    //    stays the same offset
-
-.spill_loop:
-    // rotate the window backwards, we will now have our
-    // stack pointer at a5 instead
-    rotw -1
-    s32i a0, a5, EXCEPTION_REGS_AR_END - 16
-    s32i a1, a5, EXCEPTION_REGS_AR_END - 12
-    s32i a2, a5, EXCEPTION_REGS_AR_END - 8
-    s32i a3, a5, EXCEPTION_REGS_AR_END - 4
-
-    // decrement the count, it is now in a6
-    addi a2, a6, -1
-
-    // we are going to move 16 bytes backwards
-    addi a1, a5, -16
-
-    // If we reached zero we are done
-    bnez a2, .spill_loop
-
-    // now set correctly the windowbase and windowstart
-    // we moved around to spill everything, and now that we
-    // are done spilling we are going to set the windowstart
-    // to 1 shift the windowbase, and we are going to set
-    // the windowbase as it was before, this will essentially
-    // clear everything but keep the a0 and a1 as they were at the start
-    rsr.sar a2
-    movi a3, 1
-    ssl a2      // Set Shift Amount for Left Shift
-    sll a3, a3  // Shift Left Logical
-    wsr.windowstart a3
-    wsr.windowbase a2
-    rsync
-
-.done_spill:
-
-    // return normally
-    ret
-.size save_full_interrupt_context, . - save_full_interrupt_context
-
-/**
- * Just like the save_full_interrupt_context, this is going to take an entire
- * task_regs_t context that was saved on exception or modified by the kernel and
- * restore it to continue from the exception
- */
-.type restore_full_interrupt_context,@function
-.align  4
-.literal_position
-.align  4
-restore_full_interrupt_context:
-    //
-    // restore the window, this is tricky since we need
-    // to preserve two registers, the sp and the ar0
-    //
-
-    // start by saving the sp in excsave1 and a0 in epc1
-    wsr.excsave1 sp
-    wsr.epc1 a0
-
-    // now switch it
-    l32i a2, sp, EXCEPTION_REGS_WINDOWBASE
-    l32i a3, sp, EXCEPTION_REGS_WINDOWSTART
-    wsr.windowstart a3
-    wsr.windowbase a2
-    rsync
-
-    // restore the return and the stack pointer
-    rsr.excsave1 sp
-    rsr.epc1 a0
-
-    // put the original windowbase in excsave1
-    // as we will need it to calculate how many
-    // regs to clear
-    wsr.excsave1 a2
-
-    //
-    // now we need to restore all the spill area
-    //
-
-    // load the window size, aka the count we need to restore
-    // this was calculated when we last spilled for ease of use
-    l16ui a2, sp, EXCEPTION_REGS_WINDOWSIZE
-
-    // skip the current frame, it will be restored later on
-    rotw -1
-
-    // check if we need to actually restore anything
-    beqz a6, .zero_regs
-
-    // TODO: why are we allowed to do this?
-    mov a2, a6
-    mov a3, a5
-
-    // to understand this loop it is the best to read the documentation at the
-    // spill function, we do essentially the same just backwards
-.restore_loop:
-    // go backwards one
-    rotw -1
-
-    // set the task_regs offset and decrement
-    // the count, do it before we load the correct regs
-    addi a3, a7, -16
-    addi a2, a6, -1
-
-    // load all the registers
-    l32i a4, a3, EXCEPTION_REGS_AR_END
-    l32i a5, a3, EXCEPTION_REGS_AR_END + 4
-    l32i a6, a3, EXCEPTION_REGS_AR_END + 8
-    l32i a7, a3, EXCEPTION_REGS_AR_END + 12
-
-    // If we reached zero we are done
-    bnez a2, .restore_loop
-
-.zero_regs:
-    // we restored everything that we need to restore, now clear
-    // the rest of the registers so nothing will get leaked from
-    // the kernel to the user
-
-    // calculate how many registers we need to clear by doing:
-    //   windowbase - original_windowbase
-    // If it is zero it means there is nothing to clear
-    rsr.windowbase a0
-    rsr.excsave1 a3
-    sub a3, a0, a3
-    beqz a3, .done_zeroing_regs
-
-    // only take the bits we care about, in case it
-    // got an underflow
+    // we are going to keep the intlevel
+    // but set the window enable, if its 0
+    // it means we come from level 1 so mask
+    // level 1 interrupts
+    movi a0, 1
     extui a3, a3, 0, 4
+    moveqz a3, a0, a3
+    movi a2, (1 << 18)
+    or a3, a3, a2
+    wsr.ps a3
+    rsync
 
-.zero_loop:
-    // just like the normal restore loop, but
-    // we are going to just set it to zero in here
-    // instead of loading it from the task_regs
-    rotw -1
+    // save the rest of the loop stuff
+    rsr.lbeg a4
+    rsr.lend a3
+    s32i a4, a1, IFRAME_LBEG
+    s32i a3, a1, IFRAME_LEND
 
-    // decrement loop count
-    addi a3, a7, -1
+    // call the kernel exception handler with the IFRAME as the argument
+    mov a6, a1
+    call4 kernel_exception_handler
 
-    // zero the regs
-    movi a4, 0
-    movi a5, 0
-    movi a6, 0
-    movi a7, 0
+    // start by restoring the ps
+    l32i a3, a1, IFRAME_PS
+    wsr.ps a3
 
-    // go until we reach the frame we started at,
-    // so until we reach 1
-    bgei a3, 1, .zero_loop
+    //
+    // now the fun part, we first need to check if we need to emulate
+    // a movsp in the case that the previous window-frame has been spilled
+    // into the space we setup for it instead of the actual stack.
+    //
+    // to check for that we need to check if the windowstart bit of the
+    // previous window-frame was set before but is zero now.
+    //
 
-.done_zeroing_regs:
-    // we are now back to where we were, we can
-    // continue and restore whatever else we need
-    // to restore
+    // first check if it was already spilled before hand
+    l32i a2, a1, IFRAME_WINDOWMASK
+    beqi a2, 1, .skip_movsp
 
-    // restore the PC and PS
-    l32i a2, sp, EXCEPTION_REGS_PC
+    // now check if it got spilled
+    rsr.windowstart a3
+    addi a0, a3, -1
+    and a3, a3, a0
+    bnez a3, .skip_movsp
+
+    // we need to do a movsp
+    addi    a0, a1, -16
+    l32i    a3, a0, 0
+    l32i    a4, a0, 4
+    s32i    a3, a1, IFRAME_SIZE + 0
+    s32i    a4, a1, IFRAME_SIZE + 4
+    l32i    a3, a0, 8
+    l32i    a4, a0, 12
+    s32i    a3, a1, IFRAME_SIZE + 8
+    s32i    a4, a1, IFRAME_SIZE + 12
+
+.skip_movsp:
+    // restore the live range, just like before
+    bbsi a2, 1, 1f
+    s32i a4, a1, IFRAME_A(4)
+    s32i a5, a1, IFRAME_A(5)
+    s32i a6, a1, IFRAME_A(6)
+    s32i a7, a1, IFRAME_A(7)
+    bbsi a2, 2, 1f
+    s32i a8, a1, IFRAME_A(8)
+    s32i a9, a1, IFRAME_A(9)
+    s32i a10, a1, IFRAME_A(10)
+    s32i a11, a1, IFRAME_A(11)
+    bbsi a2, 3, 1f
+    s32i a12, a1, IFRAME_A(12)
+    s32i a13, a1, IFRAME_A(13)
+    s32i a14, a1, IFRAME_A(14)
+    s32i a15, a1, IFRAME_A(15)
+
+    // restore pc and sar
+1:
+    l32i a2, a1, IFRAME_PC
+    l32i a3, a1, IFRAME_SAR
     wsr.epc1 a2
-    l32i a2, sp, EXCEPTION_REGS_PS
-    wsr.ps a2
+    wsr.sar a3
 
-    // restore shift reg
-    l32i a2, sp, EXCEPTION_REGS_SAR
-    wsr.sar a2
-
-    // restore loop regs
-    l32i a2, sp, EXCEPTION_REGS_LBEG
+    // restore loop stuff
+    l32i a2, a1, IFRAME_LBEG
+    l32i a3, a1, IFRAME_LEND
     wsr.lbeg a2
-    l32i a2, sp, EXCEPTION_REGS_LEND
-    wsr.lend a2
-    l32i a2, sp, EXCEPTION_REGS_LCOUNT
+    l32i a2, a1, IFRAME_LCOUNT
+    wsr.lend a3
     wsr.lcount a2
 
-    // we are done restoring everything else, lets
-    // finish by restoring the rest of the 16 original
-    // registers that we have not restored yet, we are
-    // going to use the mask just like we do in the spilling
-    l16ui a2, sp, EXCEPTION_REGS_WINDOWMASK
-
-    bbsi a2, 1, .done_restore_regs
-    l32i a4, sp, EXCEPTION_REGS_AR(4)
-    l32i a5, sp, EXCEPTION_REGS_AR(5)
-    l32i a6, sp, EXCEPTION_REGS_AR(6)
-    l32i a7, sp, EXCEPTION_REGS_AR(7)
-
-    bbsi a2, 2, .done_restore_regs
-    l32i a8, sp, EXCEPTION_REGS_AR(8)
-    l32i a9, sp, EXCEPTION_REGS_AR(9)
-    l32i a10, sp, EXCEPTION_REGS_AR(10)
-    l32i a11, sp, EXCEPTION_REGS_AR(11)
-
-    bbsi a2, 3, .done_restore_regs
-    l32i a12, sp, EXCEPTION_REGS_AR(12)
-    l32i a13, sp, EXCEPTION_REGS_AR(13)
-    l32i a14, sp, EXCEPTION_REGS_AR(14)
-    l32i a15, sp, EXCEPTION_REGS_AR(15)
-
-.done_restore_regs:
-    // the last a0-a3 regs will be manually restored
-    // later on just before we call the rfe instruction
-
-    // finally rsync it all to make sure that
-    // everything is updated
-    rsync
-
-    // return normally
-    ret
-.size restore_full_interrupt_context, . - restore_full_interrupt_context
-
-/**
- * While running in the kernel we want to enable the exception mode
- * and enable the use of the register window, but while we are doing
- * restore work we don't want this to happen, and we want the rotate
- * window to just rotate
- */
-enable_kernel_exceptions:
-    // set WOE = 1
-    //     INTLEVEL = 1
-    movi a2, (1 << 18) | 0xf
-    wsr.ps a2
-    rsync
-    ret
-
-/**
- * This sets the kernel exception handling
- * so we can do proper restore
- */
-disable_kernel_exceptions:
-    // set EXCM = 1
-    movi a2, (1 << 4) | 0xf
-    wsr.ps a2
-    rsync
-    ret
-
-/***********************************************************************************************************************
- * Normal exception handler, this calls an exception handler routine that will handle
- * specifically exceptions that were raised
- **********************************************************************************************************************/
-.global common_exception_entry
-.type common_exception_entry,@function
-.align  4
-.literal_position
-.align  4
-common_exception_entry:
-    // spill the full context
-    call0 save_full_interrupt_context
-
-    // enable exceptions for C code
-    call0 enable_kernel_exceptions
-
-    // now call the common interrupt handler with
-    // the task_regs_t
-    mov a6, sp
-    call4 common_exception_handler
-
-    // disable exceptions
-    call0 disable_kernel_exceptions
-
-    // restore the context that we saved
-    call0 restore_full_interrupt_context
-
-    // finish up by restoring a0-a2 and finally
-    // return from the exception, a1 must be restored
-    // last since it is the actual stack pointer
-    l32i a0, sp, EXCEPTION_REGS_AR(0)
-    l32i a2, sp, EXCEPTION_REGS_AR(2)
-    l32i a3, sp, EXCEPTION_REGS_AR(3)
-    l32i a1, sp, EXCEPTION_REGS_AR(1)
+    // restore a0-a3, with a1 being last
+    l32i a3, a1, IFRAME_A(3)
+    l32i a2, a1, IFRAME_A(2)
+    l32i a0, a1, IFRAME_A(0)
+    l32i a1, a1, IFRAME_A(1)
     rfe
-.size common_exception_entry, . - common_exception_entry
+.size dispatch_kernel_exception, . - dispatch_kernel_exception

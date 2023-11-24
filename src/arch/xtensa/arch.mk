@@ -6,6 +6,7 @@ CFLAGS 	+= -mconst16
 CFLAGS 	+= -mforce-no-pic
 CFLAGS 	+= -mtarget-align
 CFLAGS 	+= -mlongcalls
+CFLAGS 	+= -mabi=windowed
 CFLAGS 	+= -fno-pie -fno-pic -ffreestanding
 CFLAGS 	+= -nostartfiles -nostdlib -nodefaultlibs
 CFLAGS 	+= -fno-stack-check -fno-stack-protector -fomit-frame-pointer

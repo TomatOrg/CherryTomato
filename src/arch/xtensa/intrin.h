@@ -34,10 +34,12 @@ static inline void __isync(void) {
 
 static inline void disable_interrupts() {
     WSR(INTENABLE, 0);
+    __rsync();
 }
 
 static inline void enable_interrupts() {
-    WSR(INTENABLE, (1 << XCHAL_NUM_INTLEVELS) - 1);
+    WSR(INTENABLE, ~0);
+    __rsync();
 }
 
 static inline uint32_t __ccount() {
