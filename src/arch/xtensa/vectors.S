@@ -115,46 +115,81 @@ window_underflow_12:
     rfwu
 
 /***********************************************************************************************************************
- * Interrupt levels
+ * Interrupt levels - simply emulate a level1 interrupt so we can more easily share the code
  **********************************************************************************************************************/
 
+/* interrupt level 2 - 0x180 */
 .align 64
 .type level_2_vector,@function
 level_2_vector:
-/* interrupt level 2 - 0x180 */
     j level_2_vector
     rfi 2
 .size level_2_vector, . - level_2_vector
 
-.align 64
-level_3_vector:
 /* interrupt level 3 - 0x1c0 */
+.align 64
+.type level_3_vector,@function
+level_3_vector:
     j level_3_vector
     rfi 3
+.size level_3_vector, . - level_3_vector
 
-.align 64
-level_4_vector:
 /* interrupt level 4 - 0x200 */
+.align 64
+.type level_4_vector,@function
+level_4_vector:
     j level_4_vector
     rfi 4
+.size level_4_vector, . - level_4_vector
 
-.align 64
-level_5_vector:
 /* interrupt level 5 - 0x240 */
-    j level_5_vector
-    rfi 5
-
 .align 64
-debug_vector:
+.type level_5_vector,@function
+level_5_vector:
+    // save the original sp
+    wsr.excsave5 a1
+
+    // allocate the interrupt frame
+    addi a1, a1, -16 - IFRAME_SIZE
+
+    // save a0 and a1 to the iframe
+    s32i a0, a1, IFRAME_A(0)
+    rsr.excsave5 a0
+    s32i a0, a1, IFRAME_A(1)
+
+    // save the entire iframe
+    call0 save_interrupt_frame
+
+    // call the level5 handler, no need to pass the state
+    // since we are not going to make use of it anyways
+    call4 level_5_interrupt_handler
+
+    // restore it fully
+    call0 restore_interrupt_frame
+
+    // restore a0 and a1, need to make sure a1 is only restored last
+    // since it contains the reference to all of our state
+    l32i a0, a1, IFRAME_A(0)
+    l32i a1, a1, IFRAME_A(1)
+
+    rfi 5
+.size level_5_vector, . - level_5_vector
+
 /* interrupt level 6 (debug) - 0x280 */
+.align 64
+.type debug_vector,@function
+debug_vector:
     j debug_vector
     rfi 6
+.size debug_vector, . - debug_vector
 
-.align 64
-nmi_vector:
 /* interrupt level 7 (nmi) - 0x2c0 */
+.align 64
+.type nmi_vector,@function
+nmi_vector:
     j nmi_vector
     rfi 7
+.size nmi_vector, . - nmi_vector
 
 /***********************************************************************************************************************
  * Normal exceptions
@@ -166,20 +201,35 @@ nmi_vector:
 .align 64
 .type kernel_exception,@function
 kernel_exception:
-    // save a3 and a2, w ecan use depc because we don't expect
-    // a double fault to happen, and if it happens we will not
-    // restore execution anyways
-    wsr.excsave1 a2
+    // save the original sp
+    wsr.excsave1 a1
 
     // allocate the interrupt frame
-    addi a2, a1, -16 - IFRAME_SIZE
+    addi a1, a1, -16 - IFRAME_SIZE
 
-    // save a0 to the iframe
-    s32i a0, a2, IFRAME_A(0)
+    // save a0 and a1 to the iframe
+    s32i a0, a1, IFRAME_A(0)
+    rsr.excsave1 a0
+    s32i a0, a1, IFRAME_A(1)
 
-    // just call the common exception handler, we will dispatch
-    // the correct handler from there
-    j dispatch_kernel_exception
+    // save the entire iframe
+    call0 save_interrupt_frame
+
+    // call the kernel exception handler with the iframe as a parameter so
+    // that it can have access to the full state
+    // use call4 since it a windowed abi function
+    mov a6, a1
+    call4 kernel_exception_handler
+
+    // restore it fully
+    call0 restore_interrupt_frame
+
+    // restore a0 and a1, need to make sure a1 is only restored last
+    // since it contains the reference to all of our state
+    l32i a0, a1, IFRAME_A(0)
+    l32i a1, a1, IFRAME_A(1)
+
+    rfe
 .size kernel_exception, . - kernel_exception
 
 /*
@@ -198,14 +248,11 @@ user_exception:
 // The actual exception handlers
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-.type dispatch_kernel_exception,@function
-dispatch_kernel_exception:
-    // save a1, a2, a3 and set SP
-    rsr.excsave1 a0
-    s32i a1, a2, IFRAME_A(1)
-    s32i a0, a2, IFRAME_A(2)
-    s32i a3, a2, IFRAME_A(3)
-    mov a1, a2
+.type save_interrupt_frame,@function
+save_interrupt_frame:
+    // save a2 and a3 so we can use them
+    s32i a2, a1, IFRAME_A(2)
+    s32i a3, a1, IFRAME_A(3)
 
     // save SAR
     rsr.sar a2
@@ -244,42 +291,26 @@ dispatch_kernel_exception:
     // to keep the exception stack contig for spilling
     // the window properly
     l32i a3, a1, IFRAME_SIZE
-    l32i a0, a1, IFRAME_SIZE + 4
+    l32i a2, a1, IFRAME_SIZE + 4
     s32e a3, a1, -16
-    s32e a0, a1, -12
+    s32e a2, a1, -12
 
 1:
-    // restore the saved a0
-    l32i a0, a1, IFRAME_A(0)
-
-    // save the pc
-    rsr.epc1 a2
-    s32i a2, a1, IFRAME_PC
-
     // zero and save the lcount
-    movi a2, 0
-    xsr a2, lcount
+    rsr.lcount a2
     s32i a2, a1, IFRAME_LCOUNT
 
-    // save the ps
+    // save the PS, we will need it when restoring the context
     rsr.ps a3
     s32i a3, a1, IFRAME_PS
-
-    // save the exccause
-    rsr.exccause a2
-    s32i a2, a1, IFRAME_EXCCAUSE
-
-    // restore the return address for better stack tracing
-    // we want this before enabling interrupts again
-    l32i a0, a1, IFRAME_A(0)
 
     // we are going to keep the intlevel
     // but set the window enable, if its 0
     // it means we come from level 1 so mask
     // level 1 interrupts
-    movi a0, 1
+    movi a2, 1
     extui a3, a3, 0, 4
-    moveqz a3, a0, a3
+    moveqz a3, a2, a3
     movi a2, (1 << 18)
     or a3, a3, a2
     wsr.ps a3
@@ -291,11 +322,14 @@ dispatch_kernel_exception:
     s32i a4, a1, IFRAME_LBEG
     s32i a3, a1, IFRAME_LEND
 
-    // call the kernel exception handler with the IFRAME as the argument
-    mov a6, a1
-    call4 kernel_exception_handler
+    // we are done saving everything
+    ret
+.size save_interrupt_frame, . - save_interrupt_frame
 
-    // start by restoring the ps
+.type restore_interrupt_frame,@function
+restore_interrupt_frame:
+    // restore the PS, so we will not get any interrupts
+    // while restoring everything
     l32i a3, a1, IFRAME_PS
     wsr.ps a3
 
@@ -310,26 +344,26 @@ dispatch_kernel_exception:
 
     // first check if it was already spilled before hand
     l32i a2, a1, IFRAME_WINDOWMASK
-    beqi a2, 1, .skip_movsp
+    beqi a2, 1, 1f
 
     // now check if it got spilled
     rsr.windowstart a3
-    addi a0, a3, -1
-    and a3, a3, a0
-    bnez a3, .skip_movsp
+    addi a2, a3, -1
+    and a3, a3, a2
+    bnez a3, 1f
 
     // we need to do a movsp
-    addi    a0, a1, -16
-    l32i    a3, a0, 0
-    l32i    a4, a0, 4
+    addi    a2, a1, -16
+    l32i    a3, a2, 0
+    l32i    a4, a2, 4
     s32i    a3, a1, IFRAME_SIZE + 0
     s32i    a4, a1, IFRAME_SIZE + 4
-    l32i    a3, a0, 8
-    l32i    a4, a0, 12
+    l32i    a3, a2, 8
+    l32i    a4, a2, 12
     s32i    a3, a1, IFRAME_SIZE + 8
     s32i    a4, a1, IFRAME_SIZE + 12
 
-.skip_movsp:
+1:
     // restore the live range, just like before
     bbsi a2, 1, 1f
     s32i a4, a1, IFRAME_A(4)
@@ -347,11 +381,9 @@ dispatch_kernel_exception:
     s32i a14, a1, IFRAME_A(14)
     s32i a15, a1, IFRAME_A(15)
 
-    // restore pc and sar
 1:
-    l32i a2, a1, IFRAME_PC
+    // restore sar
     l32i a3, a1, IFRAME_SAR
-    wsr.epc1 a2
     wsr.sar a3
 
     // restore loop stuff
@@ -362,10 +394,10 @@ dispatch_kernel_exception:
     wsr.lend a3
     wsr.lcount a2
 
-    // restore a0-a3, with a1 being last
+    // restore a2,a3
     l32i a3, a1, IFRAME_A(3)
     l32i a2, a1, IFRAME_A(2)
-    l32i a0, a1, IFRAME_A(0)
-    l32i a1, a1, IFRAME_A(1)
-    rfe
-.size dispatch_kernel_exception, . - dispatch_kernel_exception
+
+    // we are done restoring everything we can
+    ret
+.size restore_interrupt_frame, . - restore_interrupt_frame

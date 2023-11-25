@@ -6,7 +6,10 @@
 #include "hardware/spi.h"
 #include "drivers/st7789/st7789.h"
 #include "drivers/ft6x06/ft6x06.h"
-#include "event/delay.h"
+#include "task/time.h"
+#include "intrin.h"
+#include "vectors.h"
+#include "core-isa.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Pin assignments
@@ -78,9 +81,9 @@ static err_t init_touchscreen() {
     err_t err = NO_ERROR;
 
     axp202_set_power_output(AXP202_CHANNEL_EXTEN, true);
-    delay(10000);
+    udelay(10000);
     axp202_set_power_output(AXP202_CHANNEL_EXTEN, false);
-    delay(8000);
+    udelay(8000);
     axp202_set_power_output(AXP202_CHANNEL_EXTEN, true);
 
     ft6x06_init();
@@ -89,13 +92,69 @@ cleanup:
     return err;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// System time management - use ccount + high priority overflow
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static volatile uint32_t m_ccount_overflow = 0;
+
+static void ccount_overflow_interrupt() {
+    // increase the overflow
+    m_ccount_overflow += 1;
+
+    LOG_TRACE("GOT OVERFLOW");
+
+    // re-arm the timer
+    WSR(CCOMPARE2, 0xFFFFFFFF);
+}
+
+/**
+ * Initialize the system time management, just register the interrupt
+ * and arm the timer
+ */
+static void init_system_time() {
+    register_interrupt(XCHAL_TIMER2_INTERRUPT, ccount_overflow_interrupt);
+    WSR(CCOMPARE2, 0xFFFFFFFF);
+}
+
+/**
+ * Get the system time properly
+ */
+uint64_t get_system_time() {
+    uint32_t high, low;
+    do {
+        high = m_ccount_overflow;
+        low = RSR(CCOUNT);
+    } while (high != m_ccount_overflow);
+    return (((uint64_t)high << 32) | low) / 80;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Init routine
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static void test() {
+    LOG_TRACE("LOL");
+    WSR(CCOMPARE0, RSR(CCOUNT) + 80 * 1000000);
+}
+
 void target_entry(void) {
     err_t err = NO_ERROR;
 
     LOG_INFO("Target: TTGO-TWATCH-2020-V2");
 
+    //
+    // Misc platform init
+    //
+
+    init_system_time();
+
     // no reset please
     DPORT_PERIP_RST_EN.packed = 0;
+
+    //
+    // Reset all the hardware and gate it in
+    //
 
     DPORT_PERIP_RST_EN.i2c_ext0 = 1;
     DPORT_PERIP_CLK_EN.i2c_ext0 = 1;
@@ -109,6 +168,10 @@ void target_entry(void) {
     DPORT_PERIP_CLK_EN.spi2 = 1;
     DPORT_PERIP_RST_EN.spi2 = 0;
 
+    //
+    // Connect all the required busses
+    //
+
     // sensor i2c
     i2c_init(&g_i2c0, SENSOR_SDA, SENSOR_SCL, 100 * 1000);
 
@@ -120,11 +183,23 @@ void target_entry(void) {
              ST7789_SCLK, ST7789_MOSI, INVALID_GPIO, ST7789_CS,
              80 * 1000 * 1000, SPI_DATA_MODE0);
 
-    // now probe all the ttgo hardware
-    LOG_TRACE("Initializing drivers");
-    CHECK_AND_RETHROW(init_power());
-    CHECK_AND_RETHROW(init_touchscreen());
-    CHECK_AND_RETHROW(init_display());
+    //
+    // Initialize hardware
+    //
+
+    LOG_TRACE("Initializing hardware");
+
+    register_interrupt(XCHAL_TIMER0_INTERRUPT, test);
+    WSR(CCOMPARE0, RSR(CCOUNT) + 80 * 1000000);
+    for(;;);
+
+//    while (1) {
+//        udelay(1000000);
+//        LOG_TRACE("TICK! %08x", RSR(CCOUNT));
+//    }
+//    CHECK_AND_RETHROW(init_power());
+//    CHECK_AND_RETHROW(init_touchscreen());
+//    CHECK_AND_RETHROW(init_display());
 
 cleanup:
     if (IS_ERROR(err)) {
@@ -146,4 +221,4 @@ err_t target_ft6x06_write_bytes(uint8_t addr, const uint8_t* bytes, size_t lengt
 void target_st7789_gpio_dc_set_high() { gpio_set_high(ST7789_DC); }
 void target_st7789_gpio_dc_set_low() { gpio_set_low(ST7789_DC); }
 void target_st7789_write_byte(uint8_t byte) { spi_write_byte(&g_spi2, byte); }
-void target_st7789_write_bytes(const uint8_t* bytes, size_t len, event_t* event) { spi_write(&g_spi2, bytes, len, event); }
+void target_st7789_write_bytes(const uint8_t* bytes, size_t len) { spi_write(&g_spi2, bytes, len); }

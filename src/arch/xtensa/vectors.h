@@ -17,7 +17,7 @@ typedef struct interrupt_frame {
     uint32_t lbeg;
     uint32_t lend;
     uint32_t window_mask;
-    uint32_t exccause;
+    uint32_t _reserved;
 } interrupt_frame_t;
 
 STATIC_ASSERT(sizeof(interrupt_frame_t) % 16 == 0);
@@ -28,5 +28,9 @@ STATIC_ASSERT(offsetof(interrupt_frame_t, lcount) == IFRAME_LCOUNT);
 STATIC_ASSERT(offsetof(interrupt_frame_t, lbeg) == IFRAME_LBEG);
 STATIC_ASSERT(offsetof(interrupt_frame_t, lend) == IFRAME_LEND);
 STATIC_ASSERT(offsetof(interrupt_frame_t, window_mask) == IFRAME_WINDOWMASK);
-STATIC_ASSERT(offsetof(interrupt_frame_t, window_mask) == IFRAME_WINDOWMASK);
+STATIC_ASSERT(offsetof(interrupt_frame_t, _reserved) == _IFRAME_RESERVED);
 STATIC_ASSERT(sizeof(interrupt_frame_t) == IFRAME_SIZE);
+
+typedef void (*interrupt_handler_t)();
+
+void register_interrupt(int intnum, interrupt_handler_t handler);

@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include "event/token.h"
 
 void st7789_init();
 void st7789_fillrect(uint16_t col, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
@@ -13,4 +12,4 @@ void st7789_fillrect(uint16_t col, uint16_t x, uint16_t y, uint16_t w, uint16_t 
 void target_st7789_gpio_dc_set_high();
 void target_st7789_gpio_dc_set_low();
 void target_st7789_write_byte(uint8_t byte);
-void target_st7789_write_bytes(const uint8_t* bytes, size_t len, event_t* event);
+void target_st7789_write_bytes(const uint8_t* bytes, size_t len);

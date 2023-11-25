@@ -313,14 +313,9 @@ static void spi_write_blocking(spi_t* spi, const uint8_t* buf, size_t len) {
     }
 }
 
-void spi_write(spi_t* spi, const uint8_t* bytes, size_t len, event_t* event) {
+void spi_write(spi_t* spi, const uint8_t* bytes, size_t len) {
     // blocking
     spi_write_blocking(spi, bytes, len);
-
-    if (event != NULL) {
-        // signal we are done
-        signal_event(event);
-    }
 }
 
 void spi_write_byte(spi_t* spi, uint8_t byte) {

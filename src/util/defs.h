@@ -48,6 +48,10 @@
         (__typeof(x))(_x - (_x & (_align - 1))); \
     })
 
+#define ITERATE_SET_BITS(value) \
+    for (unsigned int _mask = 1, _val = (value); _mask != 0 && _val != 0; _mask <<= 1) \
+        if (_val & _mask)
+
 #define  BIT0     0x00000001
 #define  BIT1     0x00000002
 #define  BIT2     0x00000004

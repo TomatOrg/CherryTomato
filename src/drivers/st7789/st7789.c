@@ -1,8 +1,8 @@
 #include <string.h>
 #include "st7789.h"
-#include "event/delay.h"
 #include "util/log.h"
 #include "hardware/gpio.h"
+#include "task/time.h"
 
 #define ST7789_NOP			0x00
 #define ST7789_SWRESET		0x01
@@ -99,7 +99,7 @@ static void st7789_init_color_format() {
 
     st7789_write_command(ST7789_COLMOD);
     target_st7789_write_byte(0x55);
-    delay(10000);
+    udelay(10000);
 }
 
 static void st7789_init_frame_rate() {
@@ -164,11 +164,11 @@ void st7789_init() {
 
     // reset the display
     st7789_write_command(ST7789_SWRESET);
-    delay(150000);
+    udelay(150000);
 
     // put out of sleep
     st7789_write_command(ST7789_SLPOUT);
-    delay(120000);
+    udelay(120000);
 
     // normal display mode
     st7789_write_command(ST7789_NORON);
@@ -199,7 +199,7 @@ void st7789_init() {
     }
 
     // wait a bit for commands to take effect
-    delay(120000);
+    udelay(120000);
 
     // put the display on
     st7789_write_command(ST7789_DISPON);

@@ -2,7 +2,6 @@
 
 #include "gpio.h"
 #include "util/except.h"
-#include "event/token.h"
 
 typedef struct spi {
     void* regs;
@@ -34,7 +33,7 @@ void spi_init(
 /**
  * Perform a blocking transfer using aligned data source
  */
-void spi_write(spi_t* spi, const uint8_t* bytes, size_t len, event_t* event);
+void spi_write(spi_t* spi, const uint8_t* bytes, size_t len);
 
 /**
  * Perform a blocking transfer of a single byte

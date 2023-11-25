@@ -8,5 +8,5 @@
 #define IFRAME_LBEG         (80)
 #define IFRAME_LEND         (84)
 #define IFRAME_WINDOWMASK   (88)
-#define IFRAME_EXCCAUSE     (92)
+#define _IFRAME_RESERVED    (92)
 #define IFRAME_SIZE         (96)

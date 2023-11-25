@@ -2,6 +2,8 @@
 
 #include "printf.h"
 
+#include <intrin.h>
+
 typedef enum log_level {
     /**
      * Detailed information, only for actual debugging sessions,
@@ -48,7 +50,9 @@ typedef enum log_level {
 #ifdef __HAS_CONSOLE__
     #define __LOG_CONSOLE(fmt, ...) \
         do { \
+            disable_interrupts(); \
             printf_(fmt, ##__VA_ARGS__); \
+            enable_interrupts(); \
         } while (0)
 #else
     #define __LOG_CONSOLE(fmt, ...) \

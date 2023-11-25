@@ -2,7 +2,6 @@ CROSS_COMPILER				:= $(OUT_DIR)/toolchain/xtensa-esp-elf/bin/xtensa-esp32-elf-
 
 # Some arch specific flags
 CFLAGS 	+= -mauto-litpools
-CFLAGS 	+= -mconst16
 CFLAGS 	+= -mforce-no-pic
 CFLAGS 	+= -mtarget-align
 CFLAGS 	+= -mlongcalls

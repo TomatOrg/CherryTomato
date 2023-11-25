@@ -1,7 +1,7 @@
 #include "util/log.h"
 #include "drivers/st7789/st7789.h"
 #include "drivers/ft6x06/ft6x06.h"
-#include "event/delay.h"
+#include "task/time.h"
 
 void screendemo() {
     err_t err = NO_ERROR;
@@ -12,7 +12,7 @@ void screendemo() {
         if (pressed) {
             st7789_fillrect(0, x, 320-y, 8, 8);
         }
-        delay(1000*16);
+        udelay(1000*16);
     }
 cleanup:
     if (IS_ERROR(err)) {

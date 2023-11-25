@@ -33,10 +33,7 @@ LDFLAGS			:=
 SRCS 			:=
 SRCS 			+= src/apps/entry.c
 SRCS 			+= src/apps/screendemo.c
-SRCS 			+= src/event/event.c
-SRCS 			+= src/event/lock.c
-SRCS 			+= src/event/timer.c
-SRCS 			+= src/event/tpl.c
+SRCS 			+= src/task/time.c
 SRCS 			+= src/util/printf.c
 
 SRCS			+= src/util/libm/libm.c
