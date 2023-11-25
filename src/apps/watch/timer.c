@@ -36,11 +36,11 @@ void draw_scrollbar(bool wraparound, int x, int timer_scrolloff, int top) {
         if (fading > 32) fading = 32;
         // TODO: rewrite this
         for (int i = 0; i < 60; i++) {
-            uint16_t px = g_target[g_pitch * l + x + i];
+            uint16_t px = __builtin_bswap16(g_target[g_pitch * l + x + i]);
             uint32_t r = ((px >> 0) & ((1 << 5) - 1)) * fading / 32;
             uint32_t g = ((px >> 5) & ((1 << 6) - 1)) * fading / 32;
             uint32_t b = ((px >> 11) & ((1 << 5) - 1)) * fading / 32;
-            g_target[g_pitch * l + x + i] = r | (g << 5) | (b << 11);
+            g_target[g_pitch * l + x + i] = __builtin_bswap16(r | (g << 5) | (b << 11));
         }
     }
 }

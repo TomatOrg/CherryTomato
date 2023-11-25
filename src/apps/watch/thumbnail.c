@@ -35,10 +35,10 @@ void thumbnail_draw(const uint8_t *restrict img, int x, int y) {
                 uint16_t b = MIN(240, MAX(0, g - (blues[ii] - 480 / 2)));
 
                 uint16_t col = (r * 31 / 240) | ((g * 63 / 240) << 5) | ((b * 31 / 240) << 11);
-                g_target[g_pitch * (l - g_line) + x + i * 8 + ii * 2] = col;
-                g_target[g_pitch * (l - g_line) + x + i * 8 + ii * 2 + 1] = col;
-                g_target[g_pitch * (l - g_line + 1) + x + i * 8 + ii * 2] = col;
-                g_target[g_pitch * (l - g_line + 1) + x + i * 8 + ii * 2 + 1] = col;
+                g_target[g_pitch * (l - g_line) + x + i * 8 + ii * 2] = __builtin_bswap16(col);
+                g_target[g_pitch * (l - g_line) + x + i * 8 + ii * 2 + 1] = __builtin_bswap16(col);
+                g_target[g_pitch * (l - g_line + 1) + x + i * 8 + ii * 2] = __builtin_bswap16(col);
+                g_target[g_pitch * (l - g_line + 1) + x + i * 8 + ii * 2 + 1] = __builtin_bswap16(col);
             }
         }
         // this is a neat trick

@@ -78,7 +78,7 @@ int text_drawchar(font_info_t *chinfo, int chidx, int x, int basey) {
                 uint8_t newr = intensity << 1;
                 uint8_t newg = intensity << 2;
                 uint8_t newb = intensity << 1;
-                g_target[g_pitch * (l - g_line) + x + i++] = (newr << 0) | (newg << 5) | (newb << 11);
+                g_target[g_pitch * (l - g_line) + x + i++] = __builtin_bswap16((newr << 0) | (newg << 5) | (newb << 11));
             }
         }
         rleoff += lines[l - basey + ch->top];

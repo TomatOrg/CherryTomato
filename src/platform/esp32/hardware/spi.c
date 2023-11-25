@@ -265,9 +265,6 @@ static void spi_write_blocking(spi_t* spi, const uint8_t* buf, size_t len) {
         // set the length of a 64 byte chunk
         SPI_MOSI_DLEN(spi) = 511;
         while (len > 63) {
-            // wait for the bus to be empty
-            while (SPI_CMD(spi).usr);
-
             // fill all the data we can
             SPI_W(spi, 0) = *data++;
             SPI_W(spi, 1) = *data++;
@@ -289,14 +286,13 @@ static void spi_write_blocking(spi_t* spi, const uint8_t* buf, size_t len) {
             // signal the start of the command
             SPI_CMD(spi).usr = 1;
             len -= 64;
+
+            while (SPI_CMD(spi).usr);
         }
     }
 
     // if we have more to write then flush it
     if (len != 0) {
-        // wait for the bus to be empty
-        while (SPI_CMD(spi).usr);
-
         // set the length for the amount left
         SPI_MOSI_DLEN(spi) = (len * 8) - 1;
 
@@ -310,6 +306,9 @@ static void spi_write_blocking(spi_t* spi, const uint8_t* buf, size_t len) {
 
         // signal the chunk sending
         SPI_CMD(spi).usr = 1;
+
+        // finish sending it
+        while (SPI_CMD(spi).usr);
     }
 }
 
