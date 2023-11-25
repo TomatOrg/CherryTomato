@@ -7,11 +7,15 @@
 
 #include <core-isa.h>
 
+uint32_t g_enabled_interrupts = 0;
+
 static interrupt_handler_t m_interrupt_handlers[XCHAL_NUM_INTERRUPTS];
 
 static void dispatch_interrupts(uint32_t dispatch_mask) {
     ITERATE_SET_BITS(dispatch_mask) {
-        m_interrupt_handlers[__builtin_ctz(_mask)]();
+        if (_mask & g_enabled_interrupts) {
+            m_interrupt_handlers[__builtin_ctz(_mask)]();
+        }
     }
 }
 
@@ -20,23 +24,19 @@ static void dispatch_interrupts(uint32_t dispatch_mask) {
 //----------------------------------------------------------------------------------------------------------------------
 
 void level_2_interrupt_handler() {
-    LOG_TRACE("level_2_interrupt_handler");
     dispatch_interrupts(RSR(INTERRUPT) & XCHAL_INTLEVEL2_MASK);
 }
 
 void level_3_interrupt_handler() {
-    LOG_TRACE("level_3_interrupt_handler");
     dispatch_interrupts(RSR(INTERRUPT) & XCHAL_INTLEVEL3_MASK);
 }
 
 void level_4_interrupt_handler() {
-    LOG_TRACE("level_4_interrupt_handler");
     dispatch_interrupts(RSR(INTERRUPT) & XCHAL_INTLEVEL4_MASK);
 }
 
 __attribute__((used))
 void level_5_interrupt_handler() {
-    LOG_TRACE("level_5_interrupt_handler");
     dispatch_interrupts(RSR(INTERRUPT) & XCHAL_INTLEVEL5_MASK);
 }
 
@@ -60,15 +60,13 @@ void kernel_exception_handler(interrupt_frame_t* frame) {
         return;
     }
 
-    // TODO: handle actual exceptions
-
     if (exccause < ARRAY_LENGTH(m_exception_name) && m_exception_name[exccause] != NULL) {
         LOG_CRITICAL("Got an exception `%s`", m_exception_name[exccause]);
     } else {
         LOG_CRITICAL("Got an exception `%d`", exccause);
     }
 
-    LOG_CRITICAL("PC=%08x", RSR(EPC1));
+    LOG_CRITICAL("PC=%08x", frame->pc);
     LOG_CRITICAL("");
     LOG_CRITICAL("A00=%08x  A01=%08x  A02=%08x  A03=%08x", frame->a[0], frame->a[1], frame->a[2], frame->a[3]);
     LOG_CRITICAL("A04=%08x  A05=%08x  A06=%08x  A07=%08x", frame->a[4], frame->a[5], frame->a[6], frame->a[7]);
@@ -86,6 +84,7 @@ void register_interrupt(int intnum, interrupt_handler_t handler) {
     ASSERT(intnum < XCHAL_NUM_INTERRUPTS);
 
     disable_interrupts();
+    g_enabled_interrupts |= 1 << intnum;
     m_interrupt_handlers[intnum] = handler;
     enable_interrupts();
 }

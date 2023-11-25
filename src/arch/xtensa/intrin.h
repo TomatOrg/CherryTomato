@@ -32,16 +32,27 @@ static inline void __isync(void) {
     asm ("isync");
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+// Interrupt enable and disable
+//----------------------------------------------------------------------------------------------------------------------
+
+/**
+ * The enabled interrupt mask
+ */
+extern uint32_t g_enabled_interrupts;
+
+/**
+ * Disable all interrupts
+ */
 static inline void disable_interrupts() {
     WSR(INTENABLE, 0);
     __rsync();
 }
 
+/**
+ * Enable only enabled interrupts
+ */
 static inline void enable_interrupts() {
-    WSR(INTENABLE, ~0);
+    WSR(INTENABLE, g_enabled_interrupts);
     __rsync();
-}
-
-static inline uint32_t __ccount() {
-    return RSR(CCOUNT);
 }

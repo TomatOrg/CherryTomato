@@ -122,7 +122,32 @@ window_underflow_12:
 .align 64
 .type level_2_vector,@function
 level_2_vector:
-    j level_2_vector
+    // save the original sp
+    wsr.excsave2 a1
+
+    // allocate the interrupt frame
+    addi a1, a1, -16 - IFRAME_SIZE
+
+    // save a0 and a1 to the iframe
+    s32i a0, a1, IFRAME_A(0)
+    rsr.excsave2 a0
+    s32i a0, a1, IFRAME_A(1)
+
+    // save the entire iframe
+    call0 save_interrupt_frame
+
+    // call the level5 handler, no need to pass the state
+    // since we are not going to make use of it anyways
+    call4 level_2_interrupt_handler
+
+    // restore it fully
+    call0 restore_interrupt_frame
+
+    // restore a0 and a1, need to make sure a1 is only restored last
+    // since it contains the reference to all of our state
+    l32i a0, a1, IFRAME_A(0)
+    l32i a1, a1, IFRAME_A(1)
+
     rfi 2
 .size level_2_vector, . - level_2_vector
 
@@ -130,7 +155,32 @@ level_2_vector:
 .align 64
 .type level_3_vector,@function
 level_3_vector:
-    j level_3_vector
+    // save the original sp
+    wsr.excsave3 a1
+
+    // allocate the interrupt frame
+    addi a1, a1, -16 - IFRAME_SIZE
+
+    // save a0 and a1 to the iframe
+    s32i a0, a1, IFRAME_A(0)
+    rsr.excsave3 a0
+    s32i a0, a1, IFRAME_A(1)
+
+    // save the entire iframe
+    call0 save_interrupt_frame
+
+    // call the level5 handler, no need to pass the state
+    // since we are not going to make use of it anyways
+    call4 level_3_interrupt_handler
+
+    // restore it fully
+    call0 restore_interrupt_frame
+
+    // restore a0 and a1, need to make sure a1 is only restored last
+    // since it contains the reference to all of our state
+    l32i a0, a1, IFRAME_A(0)
+    l32i a1, a1, IFRAME_A(1)
+
     rfi 3
 .size level_3_vector, . - level_3_vector
 
@@ -138,7 +188,32 @@ level_3_vector:
 .align 64
 .type level_4_vector,@function
 level_4_vector:
-    j level_4_vector
+    // save the original sp
+    wsr.excsave4 a1
+
+    // allocate the interrupt frame
+    addi a1, a1, -16 - IFRAME_SIZE
+
+    // save a0 and a1 to the iframe
+    s32i a0, a1, IFRAME_A(0)
+    rsr.excsave4 a0
+    s32i a0, a1, IFRAME_A(1)
+
+    // save the entire iframe
+    call0 save_interrupt_frame
+
+    // call the level5 handler, no need to pass the state
+    // since we are not going to make use of it anyways
+    call4 level_4_interrupt_handler
+
+    // restore it fully
+    call0 restore_interrupt_frame
+
+    // restore a0 and a1, need to make sure a1 is only restored last
+    // since it contains the reference to all of our state
+    l32i a0, a1, IFRAME_A(0)
+    l32i a1, a1, IFRAME_A(1)
+
     rfi 4
 .size level_4_vector, . - level_4_vector
 
@@ -212,6 +287,10 @@ kernel_exception:
     rsr.excsave1 a0
     s32i a0, a1, IFRAME_A(1)
 
+    // EPC1 might get overwritten
+    rsr.epc1 a0
+    s32i a0, a1, IFRAME_PC
+
     // save the entire iframe
     call0 save_interrupt_frame
 
@@ -223,6 +302,10 @@ kernel_exception:
 
     // restore it fully
     call0 restore_interrupt_frame
+
+    // restore the epc1
+    l32i a0, a1, IFRAME_PC
+    wsr.epc1 a0
 
     // restore a0 and a1, need to make sure a1 is only restored last
     // since it contains the reference to all of our state

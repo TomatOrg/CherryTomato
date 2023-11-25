@@ -102,10 +102,8 @@ static void ccount_overflow_interrupt() {
     // increase the overflow
     m_ccount_overflow += 1;
 
-    LOG_TRACE("GOT OVERFLOW");
-
     // re-arm the timer
-    WSR(CCOMPARE2, 0xFFFFFFFF);
+    WSR(CCOMPARE2, 0);
 }
 
 /**
@@ -113,8 +111,8 @@ static void ccount_overflow_interrupt() {
  * and arm the timer
  */
 static void init_system_time() {
+    WSR(CCOMPARE2, 0);
     register_interrupt(XCHAL_TIMER2_INTERRUPT, ccount_overflow_interrupt);
-    WSR(CCOMPARE2, 0xFFFFFFFF);
 }
 
 /**
@@ -132,11 +130,6 @@ uint64_t get_system_time() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Init routine
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-static void test() {
-    LOG_TRACE("LOL");
-    WSR(CCOMPARE0, RSR(CCOUNT) + 80 * 1000000);
-}
 
 void target_entry(void) {
     err_t err = NO_ERROR;
@@ -188,18 +181,9 @@ void target_entry(void) {
     //
 
     LOG_TRACE("Initializing hardware");
-
-    register_interrupt(XCHAL_TIMER0_INTERRUPT, test);
-    WSR(CCOMPARE0, RSR(CCOUNT) + 80 * 1000000);
-    for(;;);
-
-//    while (1) {
-//        udelay(1000000);
-//        LOG_TRACE("TICK! %08x", RSR(CCOUNT));
-//    }
-//    CHECK_AND_RETHROW(init_power());
-//    CHECK_AND_RETHROW(init_touchscreen());
-//    CHECK_AND_RETHROW(init_display());
+    CHECK_AND_RETHROW(init_power());
+    CHECK_AND_RETHROW(init_touchscreen());
+    CHECK_AND_RETHROW(init_display());
 
 cleanup:
     if (IS_ERROR(err)) {
