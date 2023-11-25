@@ -117,7 +117,7 @@ void messagelist_handle(ui_event_t *e) {
         // TODO: this is inefficient code
         // I don't have to memmove it around, i can just clear currx-oldx cols
         // and and display the rest without translation
-        off = MAX(0, MIN(off, 220));
+        off = MAX(0, MIN(off, 200));
         g_pitch = 200;
         for (int l = 0; l < 64; l += NLINES) {
             g_line = 20 + g_top + l + horiz_drag_idx * 80;
@@ -133,8 +133,8 @@ void messagelist_handle(ui_event_t *e) {
 
         // should we delete the message?
         bool should_delete_msg = false;
-        if (off >= 220 || off < 1) {
-            should_delete_msg = off >= 220;
+        if (off >= 200 || off < 1) {
+            should_delete_msg = off >= 200;
             m_horiz_animation = false;
         }
 
