@@ -11,8 +11,8 @@
 // rom functions needed for ram init
 void mmu_init(int cpu_no);
 
-extern int __start_bss;
-extern int __end_bss;
+extern char __start_bss[];
+extern char __end_bss[];
 
 extern volatile uint32_t TIMG0_Tx_WDTCONFIG0;
 extern volatile uint32_t TIMG1_Tx_WDTCONFIG0;
@@ -94,6 +94,9 @@ static void esp_init() {
 }
 
 void entry() {
+    // clear bss
+    memset(__start_bss, 0, __end_bss - __start_bss);
+
     // early setup, configure everything we need
     esp_init();
     disable_watchdogs();
