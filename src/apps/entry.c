@@ -1,9 +1,8 @@
 #include "entry.h"
 #include "util/log.h"
 
-void screendemo();
-
+void watch_main();
 void cherry_tomato_entry() {
-    LOG_INFO("Starting up screen demo");
-    screendemo();
+    LOG_INFO("Starting up watch");
+    watch_main();
 }

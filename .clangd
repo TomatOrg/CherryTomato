@@ -1,0 +1,2 @@
+CompileFlags:
+  Remove: [-fstrict-volatile-bitfields, -mauto-litpools, -mconst16, -mforce-no-pic, -mtarget-align, -mlongcalls]

@@ -32,33 +32,6 @@
 // Hardware initialization
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static err_t init_power() {
-    err_t err = NO_ERROR;
-
-    // setup the power controller
-    CHECK_AND_RETHROW(axp202_init());
-
-    // make sure its off
-    CHECK_AND_RETHROW(axp202_set_power_output(AXP202_CHANNEL_LDO3, false));
-    CHECK_AND_RETHROW(axp202_set_power_output(AXP202_CHANNEL_LDO2, false));
-    CHECK_AND_RETHROW(axp202_set_power_output(AXP202_CHANNEL_EXTEN, false));
-
-    // Set the backlight and st7789 voltage to 3.3
-    CHECK_AND_RETHROW(axp202_set_ldo2_voltage(3300));
-    CHECK_AND_RETHROW(axp202_set_ldo3_volatge(3300));
-
-    // disable current limiting
-    // TODO: why?
-    CHECK_AND_RETHROW(axp202_set_vbus_current_limit(AXP202_VBUS_CURRENT_LIMIT_NONE));
-
-    // enable backlight and tft/touch power output
-    CHECK_AND_RETHROW(axp202_set_power_output(AXP202_CHANNEL_LDO2, true));
-    CHECK_AND_RETHROW(axp202_set_power_output(AXP202_CHANNEL_LDO3, true));
-
-cleanup:
-    return err;
-}
-
 static err_t init_display() {
     err_t err = NO_ERROR;
 
@@ -79,12 +52,6 @@ cleanup:
 
 static err_t init_touchscreen() {
     err_t err = NO_ERROR;
-
-    axp202_set_power_output(AXP202_CHANNEL_EXTEN, true);
-    udelay(10000);
-    axp202_set_power_output(AXP202_CHANNEL_EXTEN, false);
-    udelay(8000);
-    axp202_set_power_output(AXP202_CHANNEL_EXTEN, true);
 
     ft6x06_init();
 
@@ -134,7 +101,7 @@ uint64_t get_system_time() {
 void target_entry(void) {
     err_t err = NO_ERROR;
 
-    LOG_INFO("Target: TTGO-TWATCH-2020-V2");
+    LOG_INFO("Target: Wokwi");
 
     //
     // Misc platform init
@@ -181,7 +148,6 @@ void target_entry(void) {
     //
 
     LOG_TRACE("Initializing hardware");
-    CHECK_AND_RETHROW(init_power());
     CHECK_AND_RETHROW(init_display());
     CHECK_AND_RETHROW(init_touchscreen());
 
@@ -198,7 +164,7 @@ void target_touch(bool* pressed, int* x, int* y) {
     uint16_t xx, yy;
     ft6x06_touch(pressed, &xx, &yy);
     *x = 240 - xx;
-    *y = 240 - yy;
+    *y = 320 - yy;
 }
 
 void target_set_vertical_scrolloff(uint16_t scrolloff) { st7789_set_vertical_scrolloff(scrolloff); }
@@ -206,12 +172,10 @@ void target_blit(uint16_t *buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t 
     st7789_blit(buffer, x, y, w, h);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Stubs for the drivers
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-err_t target_axp202_read_bytes(uint8_t addr, uint8_t* bytes, size_t length) { return i2c_master_read(&g_i2c0, addr, bytes, length); }
-err_t target_axp202_write_bytes(uint8_t addr, const uint8_t* bytes, size_t length) { return i2c_master_write(&g_i2c0, addr, bytes, length); }
 
 err_t target_ft6x06_read_bytes(uint8_t addr, uint8_t* bytes, size_t length) { return i2c_master_read(&g_i2c1, addr, bytes, length); }
 err_t target_ft6x06_write_bytes(uint8_t addr, const uint8_t* bytes, size_t length) { return i2c_master_write(&g_i2c1, addr, bytes, length); }
