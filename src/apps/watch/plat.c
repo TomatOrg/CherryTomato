@@ -37,8 +37,6 @@ void plat_update(int x, int y, int w, int h) {
     //LOG_TRACE("platupdate %d %d %d %d, %d", x, y, w, h, g_scrolloff);
     ASSERT(w == g_pitch);
 
-    target_set_vertical_scrolloff(floormod(g_scrolloff, 320));
-
     int starty = floormod(y, 320);
     int endy = floormod(y + h, 320);
     if (endy < starty) {
@@ -102,6 +100,7 @@ void watch_main() {
         else if (pressed) uie.touchevent.action = TOUCHACTION_CONTACT;
 
         g_handler(&uie);
+        target_set_vertical_scrolloff(floormod(g_scrolloff, 320));
 
         uint64_t after = (get_system_time() / 1000);
         uint64_t delta = after - starttime;
