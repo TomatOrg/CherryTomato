@@ -10,6 +10,7 @@
 #include "intrin.h"
 #include "vectors.h"
 #include "core-isa.h"
+#include "bluetooth/bt.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Pin assignments
@@ -160,6 +161,12 @@ void target_entry(void) {
     DPORT_PERIP_RST_EN.spi2 = 1;
     DPORT_PERIP_CLK_EN.spi2 = 1;
     DPORT_PERIP_RST_EN.spi2 = 0;
+
+    //
+    // bluetooth init
+    //
+
+    CHECK_AND_RETHROW(esp32_init_bluetooth());
 
     //
     // Connect all the required busses

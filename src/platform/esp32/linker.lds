@@ -12,6 +12,7 @@ MEMORY {
 /* mmio hardware drivers need */
 INCLUDE "src/platform/esp32/hardware/dport.lds"
 INCLUDE "src/platform/esp32/hardware/gpio.lds"
+INCLUDE "src/platform/esp32/hardware/rtc_cntl.lds"
 
 /* builtin boot rom functions */
 INCLUDE "src/platform/esp32/lds/bootrom.lds"

@@ -39,6 +39,9 @@ SRCS 			+= src/util/printf.c
 SRCS			+= src/util/libm/libm.c
 SRCS			+= src/util/libm/ef_sqrt.c
 
+# Libraries to link with
+LIBS			:=
+
 #-----------------------------------------------------------------------------------------------------------------------
 # Target configurations
 #-----------------------------------------------------------------------------------------------------------------------
@@ -85,7 +88,7 @@ BINS ?=
 $(BUILD_DIR)/firmware.elf: $(OBJS)
 	@echo LD $@
 	@mkdir -p $(@D)
-	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^ $(LIBS)
 
 # Compile c/asm files
 $(BUILD_DIR)/%.c.o: %.c

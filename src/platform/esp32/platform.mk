@@ -13,6 +13,7 @@ ARCH 				:= xtensa
 HAS_CONSOLE			:= 1
 
 # Add platform code
+SRCS				+= $(PLATFORM_DIR)/bluetooth/bt.c
 SRCS				+= $(PLATFORM_DIR)/hardware/gpio.c
 SRCS				+= $(PLATFORM_DIR)/hardware/i2c.c
 SRCS				+= $(PLATFORM_DIR)/hardware/spi.c
@@ -21,6 +22,7 @@ SRCS				+= $(PLATFORM_DIR)/entry.S
 
 CFLAGS 				+= -T$(PLATFORM_DIR)/linker.lds
 
+LIBS				+= $(PLATFORM_DIR)/bluetooth/libbtdm_app.a
 
 # The main target is the firmware binary
 all: $(BIN_DIR)/firmware.bin
