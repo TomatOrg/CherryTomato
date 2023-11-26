@@ -41,7 +41,7 @@ void plat_update(int x, int y, int w, int h) {
     int endy = floormod(y + h, 320);
     if (endy < starty) {
         target_blit(g_target, x, starty, w, 320-starty);
-        target_blit(g_target, x, 0, w, endy);
+        target_blit(g_target + (320 - starty) * 240, x, 0, w, endy);
     } else {
         target_blit(g_target, x, starty, w, h);
     }

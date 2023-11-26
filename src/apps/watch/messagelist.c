@@ -80,17 +80,19 @@ void messagelist_handle(ui_event_t *e) {
     // tap
     // ------------------------
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP && tap) {
-        g_fullmessage_toview = floordiv(m_messagelist_inertial.scroll + e->touchevent.y - 20, 80);
-        if (g_fullmessage_toview >= 0 && g_fullmessage_toview < g_messages_num) {
-            m_messagelist_anim = true;
-            m_messagelist_start = (get_system_time() / 1000);
+        if (!m_messagelist_anim) {
+            g_fullmessage_toview = floordiv(m_messagelist_inertial.scroll + e->touchevent.y - 20, 80);
+            if (g_fullmessage_toview >= 0 && g_fullmessage_toview < g_messages_num) {
+                m_messagelist_anim = true;
+                m_messagelist_start = (get_system_time() / 1000);
+            }
         }
     }
 
     // ------------------------
     // horizontal scrolling
     // ------------------------
-    if (!vertical && e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP) {
+    if (!m_messagelist_anim && !vertical && e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP) {
         m_horiz_animation = true;
         int off = MIN(240, MAX(0, e->touchevent.x - startx));
         m_hs_springstart = off;
@@ -99,7 +101,7 @@ void messagelist_handle(ui_event_t *e) {
         m_horiz_animation = true;
     }
 
-    if (m_horiz_animation || horizontal_drag) {
+    if ((m_horiz_animation || horizontal_drag) && !m_messagelist_anim) {
         int off;
         if (m_horiz_animation) {
             off = m_hs_springstart;
