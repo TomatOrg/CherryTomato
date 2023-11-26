@@ -21,7 +21,7 @@ static inertial_state_t m_scrollbar_inertial = {.round = true};
 void draw_scrollbar(bool wraparound, int x, int timer_scrolloff, int top) {
     int n = -floordiv(-timer_scrolloff, 40);
     int o = floormod(-timer_scrolloff, 40);
-    for (int i = -1; i <= 1; i++) {
+    for (int i = -2; i <= 2; i++) {
         int num = wraparound ? floormod(n + i, 60) : ((n + i) % 24);
         if (wraparound || (!wraparound && num >= 0)) {
             // TODO: dont use sprintf_
@@ -31,24 +31,46 @@ void draw_scrollbar(bool wraparound, int x, int timer_scrolloff, int top) {
         }
     }
     for (int l = 0; l < g_nlines; l++) {
-        int fading = 32 - ABS((top + 210 - 16) - (g_line + l));
+        int fading = 48 - ABS((top + 240 - 48) - (g_line + l));
         if (fading < 0) fading = 0;
-        if (fading > 32) fading = 32;
+        if (fading > 48) fading = 48;
         // TODO: rewrite this
-        for (int i = 0; i < 60; i++) {
+        for (int i = 0; i < 40; i++) {
             uint16_t px = __builtin_bswap16(g_target[g_pitch * l + x + i]);
-            uint32_t r = ((px >> 0) & ((1 << 5) - 1)) * fading / 32;
-            uint32_t g = ((px >> 5) & ((1 << 6) - 1)) * fading / 32;
-            uint32_t b = ((px >> 11) & ((1 << 5) - 1)) * fading / 32;
+            uint32_t r = ((px >> 0) & ((1 << 5) - 1)) * fading / 48;
+            uint32_t g = ((px >> 5) & ((1 << 6) - 1)) * fading / 48;
+            uint32_t b = ((px >> 11) & ((1 << 5) - 1)) * fading / 48;
             g_target[g_pitch * l + x + i] = __builtin_bswap16(r | (g << 5) | (b << 11));
         }
     }
 }
 
 void timer_draw(int top) {
-    draw_scrollbar(false, 60 + 20 - 60, m_timers_scrolloff[0], top);
-    draw_scrollbar(true, 60 + 20, m_timers_scrolloff[1], top);
-    draw_scrollbar(true, 60 + 20 + 60, m_timers_scrolloff[2], top);
+    draw_scrollbar(false, 80 - 70, m_timers_scrolloff[0], top);
+    draw_scrollbar(true, 80, m_timers_scrolloff[1], top);
+    draw_scrollbar(true, 80 + 70, m_timers_scrolloff[2], top);
+
+    for (int l = 0; l < g_nlines; l++) {
+        int fading = 48 - ABS((top + 240 - 48) - (g_line + l));
+        if (fading < 0) fading = 0;
+        if (fading > 48) fading = 48;
+        // draw dividers
+        uint32_t v = fading * 31 / 48;
+        uint32_t v2 = fading * 31 / 48 / 2;
+
+        g_target[g_pitch * l + 65-1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
+        g_target[g_pitch * l + 65] = __builtin_bswap16(v | ((v * 2) << 5) | (v << 11));
+        g_target[g_pitch * l + 65+1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
+
+        g_target[g_pitch * l + 135-1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
+        g_target[g_pitch * l + 135] = __builtin_bswap16(v | ((v * 2) << 5) | (v << 11));
+        g_target[g_pitch * l + 135+1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
+
+        g_target[g_pitch * l + 205-1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
+        g_target[g_pitch * l + 205] = __builtin_bswap16(v | ((v * 2) << 5) | (v << 11));
+        g_target[g_pitch * l + 205+1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
+    }
+
 }
 
 void timer_handle(ui_event_t *e) {
@@ -58,10 +80,10 @@ void timer_handle(ui_event_t *e) {
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_DOWN) {
         int tx = e->touchevent.x, ty = m_timer_inertial.scroll + e->touchevent.y;
         m_curr_selected = -1;
-        if (ty >= 160) {
-            if (tx >= (60 + 20 - 60) && tx < (60 + 20)) m_curr_selected = 0;
-            else if (tx >= (60 + 20) && tx < (60 + 20 + 60)) m_curr_selected = 1;
-            else if (tx >= (60 + 20 + 60) && tx < (60 + 20 + 60 + 60)) m_curr_selected = 2;
+        if (ty >= 120 && ty < 240) {
+            if (tx >= 0 && tx < 65) m_curr_selected = 0;
+            else if (tx >= 65 && tx < 135) m_curr_selected = 1;
+            else if (tx >= 135 && tx < 205) m_curr_selected = 2;
         }
         if (m_curr_selected != -1) m_timer_inertial.type = SCROLL_NONE;
     }
@@ -79,16 +101,16 @@ void timer_handle(ui_event_t *e) {
         handle_inertial(&m_scrollbar_inertial, e);
         m_timers_scrolloff[m_curr_selected] = m_scrollbar_inertial.scroll;
 
-        int startoff = 60 + 20 - 60 + 60 * m_curr_selected;
-        start = g_top + 160;
-        lines = 64;
-        g_pitch = 60;
+        int startoff = 80 + 70 * (m_curr_selected - 1);
+        start = g_top + (240 - 96);
+        lines = 96;
+        g_pitch = 40;
         for (int l = 0; l < lines; l += NLINES) {
             g_line = start + l;
             g_nlines = MIN(lines - l, NLINES);
             memset(g_target, 0, 240 * 2 * NLINES);
             draw_scrollbar(m_curr_selected != 0, 0, m_timers_scrolloff[m_curr_selected], g_top);
-            plat_update(startoff, start + l, 60, g_nlines);
+            plat_update(startoff, start + l, 40, g_nlines);
         }
     }
 

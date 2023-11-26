@@ -47,7 +47,7 @@ int text_drawchar(font_info_t *chinfo, int chidx, int x, int basey) {
     int end = MIN(g_line + g_nlines, y + height);
 
     int rleoff = height;
-    for (int i = 0; i < start - basey + ch->top; i++) rleoff += lines[i];
+    for (int i = 0; i < MIN(height, start - basey + ch->top); i++) rleoff += lines[i];
 
     for (int l = start; l < end; l++) {
         int entries_read = 2 * (4 - rleoff % 4);
