@@ -11,9 +11,10 @@
 #include "plat.h"
 #include "text.h"
 #include "ui.h"
+#include "roundedrect.h"
 #include <util/divmod.h>
 
-static int m_timers_scrolloff[3] = {0, 0, 0};
+static int m_timers_scrolloff[2] = {0, 0};
 static int m_curr_selected = -1;
 static inertial_state_t m_timer_inertial = {.has_top_constraint = 0, .has_bottom_constraint = 1};
 static inertial_state_t m_scrollbar_inertial = {.round = true};
@@ -45,10 +46,32 @@ void draw_scrollbar(bool wraparound, int x, int timer_scrolloff, int top) {
     }
 }
 
+
+static int m_mode = 0;
+static int m_notifstate = 0;
+
+void redraw_checkboxes(int top) {
+    uint16_t green = 10 | (50 << 5) | (10 << 11);
+    uint16_t gray = 10 | (20 << 5) | (10 << 11);
+
+    text_drawline(font_roboto, "Alarm", 50, top + 40);
+    roundedrect(20, top + 26, 14, 14, (m_mode == 0) ? green : gray);
+
+    text_drawline(font_roboto, "Timer", 50 + 100, top + 40);
+    roundedrect(20 + 100, top + 26, 14, 14, (m_mode == 1) ? green : gray);
+
+
+    text_drawline(font_roboto, "Vibrate", 50, top + 80);
+    roundedrect(20, top + 66, 14, 14, (m_notifstate == 0) ? green : gray);
+
+    text_drawline(font_roboto, "Notify", 50 + 100, top + 80);
+    roundedrect(20 + 100, top + 66, 14, 14, (m_notifstate == 1) ? green : gray);
+}
+
+
 void timer_draw(int top) {
-    draw_scrollbar(false, 80 - 70, m_timers_scrolloff[0], top);
-    draw_scrollbar(true, 80, m_timers_scrolloff[1], top);
-    draw_scrollbar(true, 80 + 70, m_timers_scrolloff[2], top);
+    draw_scrollbar(false, 90 - 70, m_timers_scrolloff[0], top);
+    draw_scrollbar(true, 90, m_timers_scrolloff[1], top);
 
     for (int l = 0; l < g_nlines; l++) {
         int fading = 48 - ABS((top + 240 - 48) - (g_line + l));
@@ -58,18 +81,19 @@ void timer_draw(int top) {
         uint32_t v = fading * 31 / 48;
         uint32_t v2 = fading * 31 / 48 / 2;
 
-        g_target[g_pitch * l + 65-1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
-        g_target[g_pitch * l + 65] = __builtin_bswap16(v | ((v * 2) << 5) | (v << 11));
-        g_target[g_pitch * l + 65+1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
+        g_target[g_pitch * l + 75-1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
+        g_target[g_pitch * l + 75] = __builtin_bswap16(v | ((v * 2) << 5) | (v << 11));
+        g_target[g_pitch * l + 75+1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
 
-        g_target[g_pitch * l + 135-1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
-        g_target[g_pitch * l + 135] = __builtin_bswap16(v | ((v * 2) << 5) | (v << 11));
-        g_target[g_pitch * l + 135+1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
-
-        g_target[g_pitch * l + 205-1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
-        g_target[g_pitch * l + 205] = __builtin_bswap16(v | ((v * 2) << 5) | (v << 11));
-        g_target[g_pitch * l + 205+1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
+        g_target[g_pitch * l + 145-1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
+        g_target[g_pitch * l + 145] = __builtin_bswap16(v | ((v * 2) << 5) | (v << 11));
+        g_target[g_pitch * l + 145+1] = __builtin_bswap16(v2 | ((v2 * 2) << 5) | (v2 << 11));
     }
+
+    redraw_checkboxes(top);
+
+
+    text_drawline(font_roboto, "+", 180, top + 200);
 
 }
 
@@ -81,9 +105,8 @@ void timer_handle(ui_event_t *e) {
         int tx = e->touchevent.x, ty = m_timer_inertial.scroll + e->touchevent.y;
         m_curr_selected = -1;
         if (ty >= 120 && ty < 240) {
-            if (tx >= 0 && tx < 65) m_curr_selected = 0;
-            else if (tx >= 65 && tx < 135) m_curr_selected = 1;
-            else if (tx >= 135 && tx < 205) m_curr_selected = 2;
+            if (tx >= 0 && tx < 75) m_curr_selected = 0;
+            else if (tx >= 75 && tx < 145) m_curr_selected = 1;
         }
         if (m_curr_selected != -1) m_timer_inertial.type = SCROLL_NONE;
     }
@@ -101,7 +124,7 @@ void timer_handle(ui_event_t *e) {
         handle_inertial(&m_scrollbar_inertial, e);
         m_timers_scrolloff[m_curr_selected] = m_scrollbar_inertial.scroll;
 
-        int startoff = 80 + 70 * (m_curr_selected - 1);
+        int startoff = 90 + 70 * (m_curr_selected - 1);
         start = g_top + (240 - 96);
         lines = 96;
         g_pitch = 40;

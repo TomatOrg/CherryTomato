@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "util/defs.h"
+#include "util/log.h"
 #include "roundedrect.h"
 
 uint16_t gammablend_with_black(uint16_t col, float fract) {
@@ -22,7 +23,7 @@ void roundedrect(int topx, int topy, int w, int h, uint16_t col) {
     int extendx = w - 2 * r;
     int cx = topx + w / 2;
     for (int j = 0; j < g_nlines; j++) {
-        int deg45 = ceilf(r * (1 / sqrtf(2)));
+        int deg45 = floorf(r * (1 / sqrtf(2)));
         int a = 0;
         int l = cx;
         bool is_circle = false;
@@ -46,7 +47,7 @@ void roundedrect(int topx, int topy, int w, int h, uint16_t col) {
                 for (int i = -bint + 1; i < bint; i++) g_target[j * g_pitch + l + i] = __builtin_bswap16(col);
                 g_target[j * g_pitch + l + bint] = __builtin_bswap16(gammablend_with_black(col, fract));
             } else if (a > -r && a < r) {
-                for (int i = -deg45; i < deg45; i++) {
+                for (int i = -deg45; i <= deg45; i++) {
                     float b = sqrtf(a * a + i * i);
                     float fract = r - b;
                     int o = i >= 0 ? (i + extendx / 2) : (i - extendx / 2);
