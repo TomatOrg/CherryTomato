@@ -18,8 +18,7 @@ uint16_t gammablend_with_black(uint16_t col, float fract) {
 }
 
 // TODO: extremely unoptimized
-void roundedrect(int topx, int topy, int w, int h, uint16_t col) {
-    int r = MIN(w / 2, h / 2);
+void roundedrect_round(int topx, int topy, int w, int h, int r, uint16_t col) {
     int extendx = w - 2 * r;
     int cx = topx + w / 2;
     for (int j = 0; j < g_nlines; j++) {
@@ -59,4 +58,9 @@ void roundedrect(int topx, int topy, int w, int h, uint16_t col) {
             for (int i = 1; i < w; i++) g_target[j * g_pitch + topx + i] = __builtin_bswap16(col);
         }
     }
+}
+
+// TODO: extremely unoptimized
+void roundedrect(int topx, int topy, int w, int h, uint16_t col) {
+    roundedrect_round(topx, topy, w, h, MIN(w / 2, h / 2), col);
 }
