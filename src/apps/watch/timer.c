@@ -12,6 +12,7 @@
 #include "text.h"
 #include "ui.h"
 #include "roundedrect.h"
+#include "util/log.h"
 #include <util/divmod.h>
 
 static int m_timers_scrolloff[2] = {0, 0};
@@ -60,7 +61,6 @@ void redraw_checkboxes(int top) {
     text_drawline(font_roboto, "Timer", 50 + 100, top + 40);
     roundedrect(20 + 100, top + 26, 14, 14, (m_mode == 1) ? green : gray);
 
-
     text_drawline(font_roboto, "Vibrate", 50, top + 80);
     roundedrect(20, top + 66, 14, 14, (m_notifstate == 0) ? green : gray);
 
@@ -94,7 +94,6 @@ void timer_draw(int top) {
 
 
     text_drawline(font_roboto, "+", 180, top + 200);
-
 }
 
 void timer_handle(ui_event_t *e) {
@@ -104,6 +103,44 @@ void timer_handle(ui_event_t *e) {
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_DOWN) {
         int tx = e->touchevent.x, ty = m_timer_inertial.scroll + e->touchevent.y;
         m_curr_selected = -1;
+
+        int row = -1;
+        int col = -1;
+
+        if (ty >= 0 && ty < 60) { row = 0; }
+        if (ty >= 60 && ty < 100) { row = 1; }
+
+        if (tx >= 0 && tx < 100) { col = 0; }
+        if (tx >= 100 && tx < 240) { col = 1; }
+
+        if (col != -1 && row != -1) {
+            if (row == 0) {
+                m_mode = col;
+                g_pitch = 240;
+                int start = g_top + 20;
+                int lines = 30;
+                for (int l = 0; l < lines; l += NLINES) {
+                    g_line = start + l;
+                    g_nlines = MIN(lines - l, NLINES);
+                    memset(g_target, 0, 240 * 2 * NLINES);
+                    redraw_checkboxes(g_top);
+                    plat_update(0, start + l, 240, g_nlines);
+                }
+            } else if (row == 1) {
+                m_notifstate = col;
+                g_pitch = 240;
+                int start = g_top + 60;
+                int lines = 30;
+                for (int l = 0; l < lines; l += NLINES) {
+                    g_line = start + l;
+                    g_nlines = MIN(lines - l, NLINES);
+                    memset(g_target, 0, 240 * 2 * NLINES);
+                    redraw_checkboxes(g_top);
+                    plat_update(0, start + l, 240, g_nlines);
+                }
+            }
+        }
+
         if (ty >= 120 && ty < 240) {
             if (tx >= 0 && tx < 75) m_curr_selected = 0;
             else if (tx >= 75 && tx < 145) m_curr_selected = 1;
