@@ -86,6 +86,13 @@ int text_drawchar(font_info_t *chinfo, int chidx, int x, int basey) {
     return ch->advance;
 }
 
+int text_getlinesize(font_info_t *chinfo, const char *str) {
+    int len = strlen(str);
+    int x = 0;
+    for (int i = 0; i < len; i++) { x += text_advance(chinfo, getidx(chinfo, str[i])); }
+    return x;
+}
+
 void text_drawline(font_info_t *chinfo, const char *str, int x, int basey) {
     int len = strlen(str);
     for (int i = 0; i < len; i++) { x += text_drawchar(chinfo, getidx(chinfo, str[i]), x, basey); }
