@@ -3,18 +3,22 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "util/defs.h"
+#include "util/except.h"
 #include "util/log.h"
 #include "roundedrect.h"
 
-uint16_t gammablend_with_black(uint16_t col, float fract) {
-    float a = powf(fract, 1 / 2.0);
+void blend_with_black(int off, uint16_t col, float fract) {
+    float a = fract; // TODO: this is not physically correct, need to do blending in linear space
     if (a < 0) a = 0;
     else if (a > 1) a = 1;
-    uint16_t r5 = ((col >> 0) & ((1 << 5) - 1)) * a;
-    uint16_t g6 = ((col >> 5) & ((1 << 6) - 1)) * a;
-    uint16_t b5 = ((col >> 11) & ((1 << 5) - 1)) * a;
-    uint16_t outlinecol = (r5 << 0) | (g6 << 5) | (b5 << 11);
-    return outlinecol;
+    uint16_t v = __builtin_bswap16(g_target[off]);
+    uint8_t cr = (col & 31), cg = ((col >> 5) & 63), cb = ((col >> 11) & 31);
+    uint8_t r = (v & 31), g = ((v >> 5) & 63), b = ((v >> 11) & 31);
+    uint8_t newr = r + (cr - r) * a;
+    uint8_t newg = g + (cg - g) * a;
+    uint8_t newb = b + (cb - b) * a;
+
+    g_target[off] = __builtin_bswap16((newr << 0) | (newg << 5) | (newb << 11));
 }
 
 // TODO: extremely unoptimized
@@ -42,15 +46,15 @@ void roundedrect_round(int topx, int topy, int w, int h, int r, uint16_t col) {
                 int bint = floorf(b);
                 float fract = b - bint;
                 bint += extendx / 2;
-                g_target[j * g_pitch + l - bint] = __builtin_bswap16(gammablend_with_black(col, fract));
+                blend_with_black(j * g_pitch + l - bint, col, fract);
                 for (int i = -bint + 1; i < bint; i++) g_target[j * g_pitch + l + i] = __builtin_bswap16(col);
-                g_target[j * g_pitch + l + bint] = __builtin_bswap16(gammablend_with_black(col, fract));
+                blend_with_black(j * g_pitch + l + bint, col, fract);
             } else if (a > -r && a < r) {
                 for (int i = -deg45; i <= deg45; i++) {
                     float b = sqrtf(a * a + i * i);
                     float fract = r - b;
                     int o = i >= 0 ? (i + extendx / 2) : (i - extendx / 2);
-                    g_target[j * g_pitch + l + o] = __builtin_bswap16(gammablend_with_black(col, fract));
+                    blend_with_black(j * g_pitch + l + o, col, fract);
                 }
                 for (int i = -extendx / 2; i < extendx / 2; i++) g_target[j * g_pitch + l + i] = __builtin_bswap16(col);
             }

@@ -54,17 +54,17 @@ static int m_notifstate = 0;
 void redraw_checkboxes(int top) {
     uint16_t green = 10 | (50 << 5) | (10 << 11);
     uint16_t gray = 10 | (20 << 5) | (10 << 11);
+    uint16_t darkgray = 6 | (12 << 5) | (6 << 11);
 
-    text_drawline(font_roboto, "Alarm", 50, top + 40);
-    roundedrect(20, top + 26, 14, 14, (m_mode == 0) ? green : gray);
+    int off;
+    if (m_mode == 0) off = 0;
+    else off = 75;
+    roundedrect_round((240 - 160) / 2 , top + 10, 156, 40, 14, darkgray);
+    roundedrect_round((240 - 160) / 2 + off + 3, top + 10 + 3, 75, 40 - 6, 11, gray);
 
-    text_drawline(font_roboto, "Timer", 50 + 100, top + 40);
-    roundedrect(20 + 100, top + 26, 14, 14, (m_mode == 1) ? green : gray);
+    text_drawline(font_roboto, "Alarm", (240 - 160) / 2 + 16, top + 10 + 26);
+    text_drawline(font_roboto, "Timer", (240 - 160) / 2 + 75 + 16, top + 10 + 26);
 
-    if (g_line <= top + 55 && g_line + g_nlines >= top + 55) {
-        for (int i = 20; i < 220; i++)
-            g_target[(top + 55 - g_line) * g_pitch + i] = __builtin_bswap16(8 | (16 << 5) | (8 << 11));
-    }
 
     text_drawline(font_roboto, "Vibrate", 50, top + 80);
     roundedrect(20, top + 66, 14, 14, (m_notifstate == 0) ? green : gray);
@@ -165,15 +165,15 @@ void timer_handle(ui_event_t *e) {
         if (ty >= 0 && ty < 60) { row = 0; }
         if (ty >= 60 && ty < 100) { row = 1; }
 
-        if (tx >= 0 && tx < 100) { col = 0; }
-        if (tx >= 100 && tx < 240) { col = 1; }
+        if (tx >= 0 && tx < 120) { col = 0; }
+        if (tx >= 120 && tx < 240) { col = 1; }
 
         if (col != -1 && row != -1) {
             if (row == 0) {
                 m_mode = col;
-                g_pitch = 240;
-                int start = g_top + 20;
-                int lines = 30;
+                g_pitch = 240; // TODO: this only needs to be 140px
+                int start = g_top + 10;
+                int lines = 40;
                 for (int l = 0; l < lines; l += NLINES) {
                     g_line = start + l;
                     g_nlines = MIN(lines - l, NLINES);

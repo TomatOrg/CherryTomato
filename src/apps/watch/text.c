@@ -75,9 +75,11 @@ int text_drawchar(font_info_t *chinfo, int chidx, int x, int basey) {
                 }
             }
             for (int j = 0; j < count; j++) {
-                uint8_t newr = intensity << 1;
-                uint8_t newg = intensity << 2;
-                uint8_t newb = intensity << 1;
+                uint16_t v = __builtin_bswap16(g_target[g_pitch * (l - g_line) + x + i]);
+                uint8_t r = (v & 31), g = ((v >> 5) & 63), b = ((v >> 11) & 31);
+                uint8_t newr = r + (31 - r) * intensity / 16;
+                uint8_t newg = g + (63 - g) * intensity / 16;
+                uint8_t newb = b + (31 - b) * intensity / 16;
                 g_target[g_pitch * (l - g_line) + x + i++] = __builtin_bswap16((newr << 0) | (newg << 5) | (newb << 11));
             }
         }
