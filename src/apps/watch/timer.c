@@ -61,11 +61,64 @@ void redraw_checkboxes(int top) {
     text_drawline(font_roboto, "Timer", 50 + 100, top + 40);
     roundedrect(20 + 100, top + 26, 14, 14, (m_mode == 1) ? green : gray);
 
+    if (g_line <= top + 55 && g_line + g_nlines >= top + 55) {
+        for (int i = 20; i < 220; i++)
+            g_target[(top + 55 - g_line) * g_pitch + i] = __builtin_bswap16(8 | (16 << 5) | (8 << 11));
+    }
+
     text_drawline(font_roboto, "Vibrate", 50, top + 80);
     roundedrect(20, top + 66, 14, 14, (m_notifstate == 0) ? green : gray);
 
     text_drawline(font_roboto, "Notify", 50 + 100, top + 80);
     roundedrect(20 + 100, top + 66, 14, 14, (m_notifstate == 1) ? green : gray);
+}
+
+static int m_prevtime = -1;
+static int m_oldsize = 0;
+
+void draw_hinttext() {
+    int start, lines;
+    char str[128];
+    int h = floormod(floordiv(MAX(0, m_timers_scrolloff[0]), 40), 60);
+    int m = floormod(floordiv(m_timers_scrolloff[1], 40), 60);
+    int minutes = h * 60 + m;
+
+    // TODO: check also currentminute
+    if (m_prevtime == minutes) return;
+
+    int currentminute = 13*60+37;
+    if (m_mode == 0) { // Alarm
+        int dm = minutes - currentminute;
+        if (dm < 0) dm += 24 * 60;
+        int m = dm % 60;
+        int h = dm / 60;
+        if (h == 0) {
+            sprintf_(str, "%d minutes from now", m);
+        } else {
+            sprintf_(str, "%d:%02d hours from now", h, m);
+        }
+    }
+    else if (m_mode == 1) {
+        int dm = currentminute + minutes;
+        int m = dm % 60;
+        int h = dm / 60;
+        sprintf_(str, "At %d:%02d", h, m);
+    }
+    int textsize = text_getlinesize(font_roboto, str);
+    g_pitch = MAX(m_oldsize, textsize);
+    start = g_top + 105;
+    lines = 20;
+    int xoff = (240 - textsize) / 2;
+    int real_xoff = xoff - (g_pitch - textsize) / 2;
+    for (int l = 0; l < lines; l += NLINES) {
+        g_line = start + l;
+        g_nlines = MIN(lines - l, NLINES);
+        memset(g_target, 0, 240 * 2 * NLINES);
+        text_drawline(font_roboto, str, (g_pitch - textsize) / 2, g_top + 105 + 20);
+        plat_update(real_xoff, start + l, g_pitch, g_nlines);
+    }
+
+    m_oldsize = textsize;
 }
 
 
@@ -92,9 +145,11 @@ void timer_draw(int top) {
 
     redraw_checkboxes(top);
 
+    // draw_hinttext();
 
     text_drawline(font_roboto, "+", 180, top + 200);
 }
+
 
 void timer_handle(ui_event_t *e) {
     int start, lines;
@@ -139,6 +194,9 @@ void timer_handle(ui_event_t *e) {
                     plat_update(0, start + l, 240, g_nlines);
                 }
             }
+
+            m_prevtime = -1; // need to redraw text
+            draw_hinttext();
         }
 
         if (ty >= 120 && ty < 240) {
@@ -172,6 +230,7 @@ void timer_handle(ui_event_t *e) {
             draw_scrollbar(m_curr_selected != 0, 0, m_timers_scrolloff[m_curr_selected], g_top);
             plat_update(startoff, start + l, 40, g_nlines);
         }
+        draw_hinttext();
     }
 
     if (is_viewscroll) {
