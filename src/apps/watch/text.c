@@ -76,7 +76,7 @@ int text_drawchar(font_info_t *chinfo, int chidx, int x, int basey) {
             }
             for (int j = 0; j < count; j++) {
                 uint16_t v = __builtin_bswap16(g_target[g_pitch * (l - g_line) + x + i]);
-                uint8_t r = (v & 31), g = ((v >> 5) & 63), b = ((v >> 11) & 31);
+uint8_t r = (v & 31), g = ((v >> 5) & 63), b = ((v >> 11) & 31);
                 uint8_t newr = r + (31 - r) * intensity / 16;
                 uint8_t newg = g + (63 - g) * intensity / 16;
                 uint8_t newb = b + (31 - b) * intensity / 16;
@@ -179,10 +179,12 @@ int text_draw_wrapped(font_info_t *chinfo, text_wrapped_t *msg, const char *str,
         if (textline > 0) {
             xpos = x;
             int prevline = textline - 1;
-            if ((prevline + 1) == textlines) end = msg->length;
-            else end = msg->starts[prevline + 1];
-            text_draw_wrapped_internal(chinfo, str, msg->starts[prevline], end, &xpos,
-                                                  basey + prevline * 22);
+            if (basey + prevline * 22 < g_nlines) {
+                if ((prevline + 1) == textlines) end = msg->length;
+                else end = msg->starts[prevline + 1];
+                text_draw_wrapped_internal(chinfo, str, msg->starts[prevline], end, &xpos,
+                                                      basey + prevline * 22);
+            }
         }
         xpos = x;
         textline++;
