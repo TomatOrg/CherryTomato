@@ -93,9 +93,9 @@ void draw_hinttext() {
         int m = dm % 60;
         int h = dm / 60;
         if (h == 0) {
-            sprintf_(str, "%d minutes from now", m);
+            sprintf_(str, "In %d minutes", m);
         } else {
-            sprintf_(str, "%d:%02d hours from now", h, m);
+            sprintf_(str, "In %d hours %02d minutes", h, m);
         }
     }
     else if (m_mode == 1) {
