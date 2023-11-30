@@ -239,7 +239,9 @@ void timer_handle(ui_event_t *e) {
         bool pressed = tx >= 160 && tx < 160+50 && ty >= 169 && ty < 169+50;
         if (pressed && e->touchevent.action == TOUCHACTION_DOWN) m_is_buttonpress = true;
         if (e->touchevent.action == TOUCHACTION_UP) {
-            if (pressed && m_is_buttonpress) {
+            int h, m;
+            get_values(&h, &m);
+            if (pressed && m_is_buttonpress && !(h == 0 && m == 0)) {
                 m_closing_animation = true;
                 m_closing_animation_oldy = 0;
                 m_closing_animation_start = get_system_time() / 1000;
