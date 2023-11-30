@@ -9,11 +9,33 @@
 #include "font.h"
 #include "physics.h"
 #include "plat.h"
+#include "task/time.h"
 #include "text.h"
 #include "ui.h"
 #include "roundedrect.h"
+#include "util/except.h"
 #include "util/log.h"
 #include <util/divmod.h>
+
+// ------------------------------------
+// timer list
+// ------------------------------------
+
+typedef struct ui_timer {
+    int year, month, day, hour, minute;
+    int type;
+    int display_hour, display_minute;
+} ui_timer_t;
+
+#define TIMERS_MAX 16
+ui_timer_t timers[TIMERS_MAX];
+int timers_count = 0;
+
+void timer_add(ui_timer_t* t) {
+    ASSERT(timers_count < 16);
+    timers[timers_count] = *t;
+    timers_count++;
+}
 
 static int m_timers_scrolloff[2] = {0, 0};
 static int m_curr_selected = -1;
@@ -147,9 +169,14 @@ void timer_draw(int top) {
 
     // draw_hinttext();
 
+    roundedrect(160, top + 169, 50, 50, 10 | (20 << 5) | (10 << 11));
     text_drawline(font_roboto, "+", 180, top + 200);
 }
 
+static bool m_is_buttonpress = false;
+static bool m_closing_animation = false;
+static uint64_t m_closing_animation_start;
+static bool m_closing_animation_oldy;
 
 void timer_handle(ui_event_t *e) {
     int start, lines;
@@ -205,6 +232,22 @@ void timer_handle(ui_event_t *e) {
         }
         if (m_curr_selected != -1) m_timer_inertial.type = SCROLL_NONE;
     }
+
+    if (e->type == UI_EVENT_TOUCH && (e->touchevent.action == TOUCHACTION_DOWN || e->touchevent.action == TOUCHACTION_UP)) {
+        // roundedrect(160, g_top + 169, 50, 50, 20 | (40 << 5) | (20 << 11));
+        int tx = e->touchevent.x, ty = m_timer_inertial.scroll + e->touchevent.y;
+        bool pressed = tx >= 160 && tx < 160+50 && ty >= 169 && ty < 169+50;
+        if (pressed && e->touchevent.action == TOUCHACTION_DOWN) m_is_buttonpress = true;
+        if (e->touchevent.action == TOUCHACTION_UP) {
+            if (pressed && m_is_buttonpress) {
+                m_closing_animation = true;
+                m_closing_animation_oldy = 0;
+                m_closing_animation_start = get_system_time() / 1000;
+            }
+            m_is_buttonpress = false;
+        }
+    }
+
     if (m_curr_selected == -1) {
         handle_inertial(&m_timer_inertial, e);
         ui_update_scrolloff(g_top + m_timer_inertial.scroll, &start, &lines);
@@ -231,6 +274,40 @@ void timer_handle(ui_event_t *e) {
             plat_update(startoff, start + l, 40, g_nlines);
         }
         draw_hinttext();
+    }
+
+    if (m_closing_animation) {
+        float t = ((get_system_time() / 1000) - m_closing_animation_start) / 1000.0;
+        t *= 8.0;
+        float half = 120 - spring_ex(120, 0, t, 10, 1);
+        if (half >= 119) {
+            half = 120;
+            g_frame_requested = false;
+            m_closing_animation = false;
+            g_top = g_scrolloff;
+            g_startscroll_above = 0;
+            g_handler = watchface_handle;
+        } else g_frame_requested = true;
+        int y = (int)half;
+
+        int lines = y - m_closing_animation_oldy;
+        g_pitch = 240;
+        for (int l = 0; l < lines; l += NLINES) {
+            g_line = g_scrolloff + 120 - y + l;
+            g_nlines = MIN(lines - l, NLINES);
+            memset(g_target, 0, 240 * 2 * NLINES);
+            watchface_draw(g_scrolloff);
+            plat_update(0, g_line, 240, g_nlines);
+        }
+        g_pitch = 240;
+        for (int l = 0; l < lines; l += NLINES) {
+            g_line = g_scrolloff + 120 + m_closing_animation_oldy + l;
+            g_nlines = MIN(lines - l, NLINES);
+            memset(g_target, 0, 240 * 2 * NLINES);
+            watchface_draw(g_scrolloff);
+            plat_update(0, g_line, 240, g_nlines);
+        }
+        m_closing_animation_oldy = y;
     }
 
     if (is_viewscroll) {
