@@ -179,7 +179,8 @@ int text_draw_wrapped(font_info_t *chinfo, text_wrapped_t *msg, const char *str,
         if (textline > 0) {
             xpos = x;
             int prevline = textline - 1;
-            if (basey + prevline * 22 < g_nlines) {
+            // still eats up descenders sometimes, need to check char by char
+            if (basey + prevline * 22 < g_line) {
                 if ((prevline + 1) == textlines) end = msg->length;
                 else end = msg->starts[prevline + 1];
                 text_draw_wrapped_internal(chinfo, str, msg->starts[prevline], end, &xpos,
