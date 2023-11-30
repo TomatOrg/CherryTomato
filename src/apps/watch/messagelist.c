@@ -123,7 +123,7 @@ void messagelist_handle(ui_event_t *e) {
         g_pitch = 200;
         for (int l = 0; l < 64; l += NLINES) {
             g_line = 20 + g_top + l + horiz_drag_idx * 80;
-            g_nlines = MIN(64 - l, NLINES);
+            g_nlines = MIN(64 + 1 - l, NLINES);
             memset(g_target, 0x00, 240 * 2 * NLINES);
             messagelist_draw_x(g_top + 0, 0);
             for (int i = 0; i < NLINES; i++) {
