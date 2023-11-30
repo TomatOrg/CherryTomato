@@ -15,19 +15,13 @@
 #include "roundedrect.h"
 #include "util/except.h"
 #include "util/log.h"
+#include "timer.h"
 #include <util/divmod.h>
 
 // ------------------------------------
 // timer list
 // ------------------------------------
 
-typedef struct ui_timer {
-    int year, month, day, hour, minute;
-    int type;
-    int display_hour, display_minute;
-} ui_timer_t;
-
-#define TIMERS_MAX 16
 ui_timer_t timers[TIMERS_MAX];
 int timers_count = 0;
 
@@ -70,7 +64,7 @@ void draw_scrollbar(bool wraparound, int x, int timer_scrolloff, int top) {
 }
 
 
-static int m_mode = 0;
+static int m_type = 0;
 static int m_notifstate = 0;
 
 void redraw_checkboxes(int top) {
@@ -79,7 +73,7 @@ void redraw_checkboxes(int top) {
     uint16_t darkgray = 6 | (12 << 5) | (6 << 11);
 
     int off;
-    if (m_mode == 0) off = 0;
+    if (m_type == 0) off = 0;
     else off = 75;
     roundedrect_round((240 - 160) / 2 , top + 10, 156, 40, 14, darkgray);
     roundedrect_round((240 - 160) / 2 + off + 3, top + 10 + 3, 75, 40 - 6, 11, gray);
@@ -98,19 +92,25 @@ void redraw_checkboxes(int top) {
 static int m_prevtime = -1;
 static int m_oldsize = 0;
 
+void get_values(int *h, int *m) {
+    *h = floormod(floordiv(MAX(0, m_timers_scrolloff[0]), 40), 60);
+    *m = floormod(floordiv(m_timers_scrolloff[1], 40), 60);
+}
+
+static int m_currentminute = 13*60+37;
+
 void draw_hinttext() {
     int start, lines;
     char str[128];
-    int h = floormod(floordiv(MAX(0, m_timers_scrolloff[0]), 40), 60);
-    int m = floormod(floordiv(m_timers_scrolloff[1], 40), 60);
+    int h, m;
+    get_values(&h, &m);
     int minutes = h * 60 + m;
 
     // TODO: check also currentminute
     if (m_prevtime == minutes) return;
 
-    int currentminute = 13*60+37;
-    if (m_mode == 0) { // Alarm
-        int dm = minutes - currentminute;
+    if (m_type == 0) { // Alarm
+        int dm = minutes - m_currentminute;
         if (dm < 0) dm += 24 * 60;
         int m = dm % 60;
         int h = dm / 60;
@@ -120,10 +120,10 @@ void draw_hinttext() {
             sprintf_(str, "In %d hours %02d minutes", h, m);
         }
     }
-    else if (m_mode == 1) {
-        int dm = currentminute + minutes;
+    else if (m_type == 1) {
+        int dm = m_currentminute + minutes;
         int m = dm % 60;
-        int h = dm / 60;
+        int h = (dm / 60) % 24;
         sprintf_(str, "At %d:%02d", h, m);
     }
     int textsize = text_getlinesize(font_roboto, str);
@@ -197,7 +197,7 @@ void timer_handle(ui_event_t *e) {
 
         if (col != -1 && row != -1) {
             if (row == 0) {
-                m_mode = col;
+                m_type = col;
                 g_pitch = 240; // TODO: this only needs to be 140px
                 int start = g_top + 10;
                 int lines = 40;
@@ -287,6 +287,20 @@ void timer_handle(ui_event_t *e) {
             g_top = g_scrolloff;
             g_startscroll_above = 0;
             g_handler = watchface_handle;
+
+
+            // add the timer
+            ui_timer_t t = { .type = m_type };
+            get_values(&t.display_hour, &t.display_minute);
+            if (m_type == 0) { // alarm
+                t.hour = t.display_hour;
+                t.minute = t.display_minute;
+            } else if (m_type == 1) { // timer
+                int dm = m_currentminute + t.hour * 60 + t.minute;
+                t.hour = (dm / 60) % 24;
+                t.minute = dm % 60;
+            }
+            timer_add(&t);
         } else g_frame_requested = true;
         int y = (int)half;
 

@@ -15,23 +15,47 @@
 #include "text.h"
 #include "thumbnail.h"
 #include "ui.h"
+#include "timer.h"
 #include <util/divmod.h>
 #include "roundedrect.h"
+#include "util/log.h"
+#include <util/except.h>
+
+static ui_timer_t m_timer;
 
 void alarmdone_draw(int top) {
+    char string[16];
+    char *mode;
+    char *activebutton;
+    char *secondbutton;
+    if (m_timer.type == 0) {
+        sprintf_(string, "%02d:%02d", m_timer.display_hour, m_timer.display_minute);
+        mode = "ALARM";
+        activebutton = "Snooze";
+        secondbutton = "Stop";
+    } else if (m_timer.type == 1) {
+        sprintf_(string, "+%02d:%02d:00", m_timer.display_hour, m_timer.display_minute);
+        mode = "TIMER";
+        activebutton = "Stop";
+        secondbutton = "Repeat";
+    } else ASSERT(false);
     int size, startx;
 
-    size = text_getlinesize(font_bebas3, "TIMER");
+    size = text_getlinesize(font_bebas3, mode);
     startx = (240 - size) / 2;
-    text_drawline(font_bebas3, "TIMER", startx, 130);
+    text_drawline(font_bebas3, mode, startx, top + 130);
 
-
-    size = text_getlinesize(font_bebas2, "5:00");
+    size = text_getlinesize(font_bebas4, string);
     startx = (240 - size) / 2;
-    text_drawline(font_bebas2, "5:00", startx, 90);
+    text_drawline(font_bebas4, string, startx, top + 90);
 
-    roundedrect(20, 160, 90, 60, (15) | (30 << 5) | (15 << 11));
-    roundedrect(130, 160, 90, 60, (5) | (50 << 5) | (10 << 11));
+    roundedrect(20, top + 160, 90, 60, (10) | (20 << 5) | (10 << 11));
+    size = text_getlinesize(font_roboto, secondbutton);
+    text_drawline(font_roboto, secondbutton, 20 + (90 - size) / 2, top + 160 + (60 + 18/2) / 2);
+
+    roundedrect(130, top + 160, 90, 60, (5) | (20 << 5) | (24 << 11));
+    size = text_getlinesize(font_roboto, activebutton);
+    text_drawline(font_roboto, activebutton, 130 + (90 - size) / 2, top + 160 + (60 + 18/2) / 2);
 }
 
 void alarmdone_handle(ui_event_t *e) {
@@ -40,6 +64,8 @@ void alarmdone_handle(ui_event_t *e) {
     if (e->type == UI_EVENT_REDRAW) {
         start = g_top;
         lines = 240;
+        ASSERT(timers_count > 0);
+        m_timer = timers[0];
     }
 
     g_pitch = 240;

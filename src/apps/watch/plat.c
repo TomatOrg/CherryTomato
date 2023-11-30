@@ -1,4 +1,5 @@
 #include "plat.h"
+#include "apps/watch/ui.h"
 #include "event.h"
 #include <util/divmod.h>
 
@@ -7,6 +8,7 @@
 #include "drivers/st7789/st7789.h"
 #include "drivers/ft6x06/ft6x06.h"
 #include "task/time.h"
+#include "timer.h"
 
 typedef void handler_t(ui_event_t *e);
 extern handler_t *g_handler;
@@ -67,6 +69,13 @@ void watch_main() {
     uint64_t prevframe = (get_system_time() / 1000);
 
     while (true) {
+        // TODO: check if the timer is actually done lol
+        if (timers_count > 0) {
+            ui_event_t uie = {.type = UI_EVENT_REDRAW};
+            g_handler = alarmdone_handle;
+            g_handler(&uie);
+        }
+
         uint64_t starttime = (get_system_time() / 1000);
 
         bool up = false, down = false;

@@ -93,7 +93,7 @@ def main():
     conv(path + "/BebasNeue.ttf", 180, path + "/_bebas1", "0123456789")
     conv(path + "/BebasNeue.ttf", 86, path + "/_bebas2", "0123456789+:")
     conv(path + "/BebasNeue.ttf", 32, path + "/_bebas3", " ABCDEFGHIJKLNMOPQRSTUVWXYZ0123456789")
-    conv(path + "/BebasNeue.ttf", 50, path + "/_bebas4", "0123456789")
+    conv(path + "/BebasNeue.ttf", 50, path + "/_bebas4", "0123456789+:")
     conv(path + "/Roboto.ttf", 18, path + "/_roboto", " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ")
 
 if __name__ == "__main__":
