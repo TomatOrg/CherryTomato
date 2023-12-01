@@ -20,7 +20,7 @@
  * ====================================================
  */
 
-#include <math.h>
+#include <stdint.h>
 
 /* Default to XOPEN_MODE.  */
 #define _XOPEN_MODE
@@ -177,7 +177,7 @@ extern float __ieee754_y1f __P((float));
 extern float __ieee754_jnf __P((int,float));
 extern float __ieee754_ynf __P((int,float));
 extern float __ieee754_remainderf __P((float,float));
-extern __int32_t __ieee754_rem_pio2f __P((float,float*));
+extern int32_t __ieee754_rem_pio2f __P((float,float*));
 #ifdef _SCALB_INT
 extern float __ieee754_scalbf __P((float,int));
 #else
@@ -188,7 +188,7 @@ extern float __ieee754_scalbf __P((float,float));
 extern float __kernel_sinf __P((float,float,int));
 extern float __kernel_cosf __P((float,float));
 extern float __kernel_tanf __P((float,float,int));
-extern int   __kernel_rem_pio2f __P((float*,float*,int,int,int,const __uint8_t*));
+extern int   __kernel_rem_pio2f __P((float*,float*,int,int,int,const uint8_t*));
 
 /* A union which permits us to convert between a float and a 32 bit
    int.  */
@@ -196,7 +196,7 @@ extern int   __kernel_rem_pio2f __P((float*,float*,int,int,int,const __uint8_t*)
 typedef union
 {
   float value;
-  __uint32_t word;
+  uint32_t word;
 } ieee_float_shape_type;
 
 /* Get a 32 bit int from a float.  */

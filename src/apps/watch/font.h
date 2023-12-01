@@ -17,14 +17,14 @@ typedef struct font_info {
     uint8_t storage[];
 } font_info_t;
 
-extern uint8_t _binary__bebas1_start[];
-extern uint8_t _binary__bebas2_start[];
-extern uint8_t _binary__bebas3_start[];
-extern uint8_t _binary__bebas4_start[];
-extern uint8_t _binary__roboto_start[];
+extern uint8_t _bebas1[];
+extern uint8_t _bebas2[];
+extern uint8_t _bebas3[];
+extern uint8_t _bebas4[];
+extern uint8_t _roboto[];
 
-#define font_bebas1 ((font_info_t*)_binary__bebas1_start)
-#define font_bebas2 ((font_info_t*)_binary__bebas2_start)
-#define font_bebas3 ((font_info_t*)_binary__bebas3_start)
-#define font_bebas4 ((font_info_t*)_binary__bebas4_start)
-#define font_roboto ((font_info_t*)_binary__roboto_start)
+#define font_bebas1 ((font_info_t*)_bebas1)
+#define font_bebas2 ((font_info_t*)_bebas2)
+#define font_bebas3 ((font_info_t*)_bebas3)
+#define font_bebas4 ((font_info_t*)_bebas4)
+#define font_roboto ((font_info_t*)_roboto)

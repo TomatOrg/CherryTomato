@@ -17,7 +17,9 @@ void target_entry(void) {
 
     LOG_INFO("Target: SDL-based simulator");
 
-    assert(SDL_Init(SDL_INIT_EVERYTHING) >= 0);
+    assert(SDL_Init(SDL_INIT_VIDEO) >= 0);
+    assert(SDL_Init(SDL_INIT_EVENTS) >= 0);
+    assert(SDL_Init(SDL_INIT_TIMER) >= 0);
     win2 = SDL_CreateWindow("CherryTomato Debug", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 240, 320, 0);
     assert(win2);
 

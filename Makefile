@@ -16,10 +16,9 @@ TARGET 			?= ttgo-twatch-2020-v2
 OUT_DIR			:= out
 
 # The compiler flags
-CFLAGS 			:= -Os -g
+CFLAGS 			:= -Os
 CFLAGS 			+= -Wall -Werror
 CFLAGS 			+= -Wno-unused-label -Wno-unused-function
-CFLAGS 			+= -fstrict-volatile-bitfields
 CFLAGS 			+= -Isrc
 CFLAGS 			+= -DPRINTF_SUPPORT_DECIMAL_SPECIFIERS=0
 CFLAGS 			+= -DPRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS=0
@@ -85,21 +84,20 @@ endif
 # Binaries
 #-----------------------------------------------------------------------------------------------------------------------
 
-CC				:= $(CROSS_COMPILER)gcc
-OBJCOPY			:= $(CROSS_COMPILER)objcopy
+CC				?= $(CROSS_COMPILER)gcc
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Generic Targets
 #-----------------------------------------------------------------------------------------------------------------------
 
-OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
+OBJS := $(SRCS:%=$(BUILD_DIR)/%.o) $(BUILD_DIR)/res/fonts.o
 DEPS := $(OBJS:%.o=%.d)
 BINS ?=
 
 -include $(DEPS)
 
 # The elf output, this is not always the last step, so put it in the build dir instead
-$(BUILD_DIR)/firmware.elf: $(OBJS) $(BUILD_DIR)/res/fonts.a
+$(OUT_FILE): $(OBJS)
 	@echo LD $@
 	@mkdir -p $(@D)
 	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^
@@ -115,15 +113,15 @@ $(BUILD_DIR)/%.S.o: %.S
 	@mkdir -p $(@D)
 	$(CC) -Wall $(CFLAGS) -MMD -c $< -o $@
 
-$(BUILD_DIR)/res/fonts.a: $(BUILD_DIR)/res/BebasNeue.ttf $(BUILD_DIR)/res/Roboto.ttf
+$(BUILD_DIR)/res/fonts.o: $(BUILD_DIR)/res/BebasNeue.ttf $(BUILD_DIR)/res/Roboto.ttf
 	@mkdir -p $(@D)
 	@python src/scripts/fontconv.py $(BUILD_DIR)/res
-	@cd $(BUILD_DIR)/res/; $(OBJCOPY) -I binary -O default _roboto _roboto.o
-	@cd $(BUILD_DIR)/res/; $(OBJCOPY) -I binary -O default _bebas1 _bebas1.o
-	@cd $(BUILD_DIR)/res/; $(OBJCOPY) -I binary -O default _bebas2 _bebas2.o
-	@cd $(BUILD_DIR)/res/; $(OBJCOPY) -I binary -O default _bebas3 _bebas3.o
-	@cd $(BUILD_DIR)/res/; $(OBJCOPY) -I binary -O default _bebas4 _bebas4.o
-	@ar rcs $(BUILD_DIR)/res/fonts.a $(BUILD_DIR)/res/_roboto.o $(BUILD_DIR)/res/_bebas1.o $(BUILD_DIR)/res/_bebas2.o $(BUILD_DIR)/res/_bebas3.o $(BUILD_DIR)/res/_bebas4.o
+	@cd $(BUILD_DIR)/res/; xxd -i _roboto > fonts.c
+	@cd $(BUILD_DIR)/res/; xxd -i _bebas1 >> fonts.c
+	@cd $(BUILD_DIR)/res/; xxd -i _bebas2 >> fonts.c
+	@cd $(BUILD_DIR)/res/; xxd -i _bebas3 >> fonts.c
+	@cd $(BUILD_DIR)/res/; xxd -i _bebas4 >> fonts.c
+	$(CC) -Wall $(CFLAGS) -MMD -c $(BUILD_DIR)/res/fonts.c -o $(BUILD_DIR)/res/fonts.o
 
 $(BUILD_DIR)/res/BebasNeue.ttf:
 	@mkdir -p $(@D)

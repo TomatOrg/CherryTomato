@@ -1,4 +1,5 @@
 CROSS_COMPILER := $(abspath $(OUT_DIR))/toolchain/xtensa-esp-elf/bin/xtensa-esp32-elf-
+CC := $(CROSS_COMPILER)gcc
 
 # Some arch specific flags
 CFLAGS 	+= -static
@@ -7,12 +8,14 @@ CFLAGS 	+= -mforce-no-pic
 CFLAGS 	+= -mtarget-align
 CFLAGS 	+= -mlongcalls
 CFLAGS 	+= -mabi=windowed
+CFLAGS 	+= -fstrict-volatile-bitfields
 CFLAGS 	+= -fno-pie -fno-pic -ffreestanding
 CFLAGS 	+= -nostartfiles -nostdlib -nodefaultlibs
 CFLAGS 	+= -fno-stack-check -fno-stack-protector -fomit-frame-pointer
 CFLAGS 	+= -flto -fuse-linker-plugin -fno-fat-lto-objects
 CFLAGS 	+= -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
 
+OUT_FILE := $(BUILD_DIR)/firmware.elf
 
 SRCS 	+= $(ARCH_DIR)/vectors.c
 SRCS 	+= $(ARCH_DIR)/vectors.S

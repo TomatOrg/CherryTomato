@@ -11,4 +11,4 @@ HAS_CONSOLE			:= 1
 SRCS				+= $(PLATFORM_DIR)/entry.c
 
 # The main target is the firmware binary
-all: $(BUILD_DIR)/firmware.elf
+all: $(OUT_FILE)
