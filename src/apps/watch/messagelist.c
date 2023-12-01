@@ -31,6 +31,7 @@ static bool m_messagelist_anim = false;
 static uint64_t m_messagelist_start = 0;
 static int m_messagelist_anim_oldy = 0;
 static bool m_horiz_animation;
+static bool m_horiz_drag_ended = false;
 
 static void messagelist_draw_x(int top, int x) {
     for (int i = 0; i < g_messages_num; i++) {
@@ -49,6 +50,10 @@ void messagelist_handle(ui_event_t *e) {
 
     gesture_recognizer(e, &recognized, &vertical, &tap, &startx, &starty);
     int horiz_drag_idx = floordiv(m_messagelist_inertial.scroll + starty - 20, 80); // TODO: check overflow
+
+    if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_DOWN && recognized) {
+        m_horiz_drag_ended = false;
+    }
 
     bool horizontal_drag = !m_messagelist_anim && recognized && !vertical;
     bool is_vertical_movement = !m_messagelist_anim && !horizontal_drag && !m_horiz_animation;
@@ -92,16 +97,15 @@ void messagelist_handle(ui_event_t *e) {
     // ------------------------
     // horizontal scrolling
     // ------------------------
-    if (!m_messagelist_anim && !vertical && e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP) {
+    if (!m_horiz_drag_ended && !m_messagelist_anim && !vertical && e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP) {
         m_horiz_animation = true;
         int off = MIN(240, MAX(0, e->touchevent.x - startx));
         m_hs_springstart = off;
         m_hs_spring_starttime = (get_system_time() / 1000);
         m_hs_isgoingright = off >= 40;
-        m_horiz_animation = true;
     }
 
-    if ((m_horiz_animation || horizontal_drag) && !m_messagelist_anim) {
+    if ((m_horiz_animation || horizontal_drag) && !m_messagelist_anim && !m_horiz_drag_ended) {
         int off;
         if (m_horiz_animation) {
             off = m_hs_springstart;
@@ -123,7 +127,7 @@ void messagelist_handle(ui_event_t *e) {
         g_pitch = 200;
         for (int l = 0; l < 64; l += NLINES) {
             g_line = 20 + g_top + l + horiz_drag_idx * 80;
-            g_nlines = MIN(64 + 1 - l, NLINES);
+            g_nlines = MIN(64 - l, NLINES);
             memset(g_target, 0x00, 240 * 2 * NLINES);
             messagelist_draw_x(g_top + 0, 0);
             for (int i = 0; i < NLINES; i++) {
@@ -138,6 +142,7 @@ void messagelist_handle(ui_event_t *e) {
         if (off >= 200 || off < 1) {
             should_delete_msg = off >= 200;
             m_horiz_animation = false;
+            m_horiz_drag_ended = true;
         }
 
         if (should_delete_msg) {
@@ -148,7 +153,7 @@ void messagelist_handle(ui_event_t *e) {
             // draw the rest
             // TODO: i can do a scrolloff trick here, but it's fast enough for now
             int start = 20 + horiz_drag_idx * 80;
-            int numlines = 240 - (20 + horiz_drag_idx * 80 - m_messagelist_inertial.scroll);
+            int numlines = 240 - (20 + horiz_drag_idx * 80 - m_messagelist_inertial.scroll) + 1;
             g_pitch = 200;
             for (int l = 0; l < numlines; l += NLINES) {
                 g_line = g_top + l + start;
