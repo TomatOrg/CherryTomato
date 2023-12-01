@@ -113,14 +113,13 @@ void draw_hinttext() {
         int dm = minutes - m_currentminute;
         if (dm < 0) dm += 24 * 60;
         int m = dm % 60;
-        int h = dm / 60;
+        int h = (dm / 60) % 24;
         if (h == 0) {
             sprintf_(str, "In %d minutes", m);
         } else {
             sprintf_(str, "In %d hours %02d minutes", h, m);
         }
-    }
-    else if (m_type == 1) {
+    } else if (m_type == 1) {
         int dm = m_currentminute + minutes;
         int m = dm % 60;
         int h = (dm / 60) % 24;
