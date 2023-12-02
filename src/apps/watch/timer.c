@@ -176,6 +176,7 @@ static bool m_is_buttonpress = false;
 static bool m_closing_animation = false;
 static uint64_t m_closing_animation_start;
 static int m_closing_animation_oldy;
+static bool m_pressed = false;
 
 void timer_handle(ui_event_t *e) {
     int start, lines;
@@ -229,18 +230,23 @@ void timer_handle(ui_event_t *e) {
             if (tx >= 0 && tx < 75) m_curr_selected = 0;
             else if (tx >= 75 && tx < 145) m_curr_selected = 1;
         }
-        if (m_curr_selected != -1) m_timer_inertial.type = SCROLL_NONE;
+        if (m_curr_selected != -1) {
+            m_timer_inertial.type = SCROLL_NONE;
+            m_timer_inertial.starttime = 0;
+            m_timer_inertial.velocity = 0;
+            m_timer_inertial.starttime = 0;
+        }
     }
 
     if (e->type == UI_EVENT_TOUCH && (e->touchevent.action == TOUCHACTION_DOWN || e->touchevent.action == TOUCHACTION_UP)) {
         // roundedrect(160, g_top + 169, 50, 50, 20 | (40 << 5) | (20 << 11));
         int tx = e->touchevent.x, ty = m_timer_inertial.scroll + e->touchevent.y;
-        bool pressed = tx >= 16-10 && tx < 160+50+10 && ty >= 169-10 && ty < 169+50+10;
-        if (pressed && e->touchevent.action == TOUCHACTION_DOWN) m_is_buttonpress = true;
+        m_pressed = tx >= 160-5 && tx < 160+50+5 && ty >= 169-10 && ty < 169+50+10;
+        if (m_pressed && e->touchevent.action == TOUCHACTION_DOWN) m_is_buttonpress = true;
         if (e->touchevent.action == TOUCHACTION_UP) {
             int h, m;
             get_values(&h, &m);
-            if (pressed && m_is_buttonpress && !(h == 0 && m == 0)) {
+            if (m_pressed && m_is_buttonpress && !(h == 0 && m == 0)) {
                 m_closing_animation = true;
                 m_closing_animation_oldy = 0;
                 m_closing_animation_start = get_system_time() / 1000;
@@ -249,13 +255,13 @@ void timer_handle(ui_event_t *e) {
         }
     }
 
-    if (m_curr_selected == -1) {
+    if (m_curr_selected == -1 && !m_pressed) {
         handle_inertial(&m_timer_inertial, e);
         ui_update_scrolloff(g_top + m_timer_inertial.scroll, &start, &lines);
         is_viewscroll = true;
     }
 
-    if (m_curr_selected != -1 || m_scrollbar_inertial.type != SCROLL_NONE) {
+    if (m_curr_selected != -1) {
         int oldscro = m_timers_scrolloff[m_curr_selected];
         m_scrollbar_inertial.scroll = oldscro;
         bool wrap = (m_curr_selected == 0);

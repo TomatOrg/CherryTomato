@@ -57,7 +57,7 @@ void alarmdone_draw(int top) {
     size = text_getlinesize(font_roboto, secondbutton);
     text_drawline(font_roboto, secondbutton, 20 + (90 - size) / 2, top + 160 + (60 + 24/2) / 2);
 
-    roundedrect(130, top + 160, 90, 60, (5) | (20 << 5) | (24 << 11));
+    roundedrect(130, top + 160, 90, 60, (5) | (15 << 5) | (20 << 11));
     size = text_getlinesize(font_roboto, activebutton);
     text_drawline(font_roboto, activebutton, 130 + (90 - size) / 2, top + 160 + (60 + 24/2) / 2);
 }
@@ -95,8 +95,10 @@ void alarmdone_handle(ui_event_t *e) {
         bool timer_repeat = m_timer.type == 1 && button_num == 0;
 
         // remove the timer in all cases, we are gonna readd it if needed
-        timers_count--;
-        memmove(timers, timers + 1, timers_count);
+        if (timers_count > 0) {
+            timers_count--;
+            memmove(timers, timers + 1, timers_count);
+        }
 
         if (alarm_snooze) {
             m_timer.minute += 5;
