@@ -129,7 +129,7 @@ STATIC_ASSERT(sizeof(SPI_CMD_REG) == sizeof(uint32_t));
 #define SPI_PIN(x)          (*(volatile SPI_PIN_REG*)(x->regs + 0x34))
 #define SPI_SALVE(x)        (*(volatile uint32_t*)(x->regs + 0x38))
 
-static void spi_setup(spi_t* spi, uint32_t frequency) {
+static void spi_setup(spi_t* spi, int frequency) {
     SPI_CLOCK_REG clock = { .packed = 0 };
 
     // In HW, n, h and l fields range from 1 to 64, pre ranges from 1 to 8K.
@@ -144,27 +144,27 @@ static void spi_setup(spi_t* spi, uint32_t frequency) {
         // calculate the best pre to go along with that. If there's a choice
         // between pre/n combos that give the same result, use the one with the
         // higher n.
-        int32_t bestn = -1;
-        int32_t bestpre = -1;
-        int32_t besterr = 0;
+        int bestn = -1;
+        int bestpre = -1;
+        int besterr = 0;
 
         // Start at n = 2. We need to be able to set h/l so we have at least
         // one high and one low pulse.
-        for (int n = 2; n < 64; n++) {
+        for (int n = 2; n <= 64; n++) {
             // Effectively, this does:
             //   pre = round((APB_CLK_FREQ / n) / frequency)
 
-            int32_t pre = ((APB_CLOCK_HZ / n) + (frequency / 2)) / frequency;
+            int pre = ((APB_CLOCK_HZ / n) + (frequency / 2)) / frequency;
 
             if (pre <= 0) {
                 pre = 1;
             }
 
-            if (pre > 16) {
-                pre = 16;
+            if (pre > 8192) {
+                pre = 8192;
             }
 
-            int32_t errval = ABS((APB_CLOCK_HZ / (pre * n)) - frequency);
+            int errval = ABS((APB_CLOCK_HZ / (pre * n)) - frequency);
             if (bestn == -1 || errval <= besterr) {
                 besterr = errval;
                 bestn = n;
@@ -172,21 +172,21 @@ static void spi_setup(spi_t* spi, uint32_t frequency) {
             }
         }
 
-        int32_t n = bestn;
-        int32_t pre = bestpre;
-        int32_t l = n;
+        int n = bestn;
+        int pre = bestpre;
+        int l = n;
 
         // Effectively, this does:
         //   h = round((duty_cycle * n) / 256)
-        int32_t h = (128 * n + 127) / 256;
+        int h = (128 * n + 127) / 256;
         if (h <= 0) {
             h = 1;
         }
 
-        clock.l = l;
-        clock.h = h;
-        clock.n = n;
-        clock.pre = pre;
+        clock.l = l - 1;
+        clock.h = h - 1;
+        clock.n = n - 1;
+        clock.pre = pre - 1;
     }
 
     // set the clock
@@ -299,7 +299,7 @@ static void spi_write_blocking(spi_t* spi, const uint8_t* buf, size_t len) {
 
         // write at a dword granularity
         for (int i = 0; i < len; i += 4) {
-            SPI_W(spi, i) = *data++;
+            SPI_W(spi, i / 4) = *data++;
         }
 
         // signal the chunk sending

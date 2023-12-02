@@ -174,7 +174,7 @@ void target_entry(void) {
     // display spi
     spi_init(&g_spi2,
              ST7789_SCLK, ST7789_MOSI, INVALID_GPIO, ST7789_CS,
-             80 * 1000 * 1000, SPI_DATA_MODE0);
+             8 * 1000 * 1000, SPI_DATA_MODE0);
 
     //
     // Initialize hardware
@@ -202,9 +202,7 @@ void target_touch(bool* pressed, int* x, int* y) {
 }
 
 void target_set_vertical_scrolloff(uint16_t scrolloff) { st7789_set_vertical_scrolloff(scrolloff); }
-void target_blit(uint16_t *buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-    st7789_blit(buffer, x, y, w, h);
-}
+void target_blit(uint16_t *buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h) { st7789_blit(buffer, x, y, w, h); }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Stubs for the drivers

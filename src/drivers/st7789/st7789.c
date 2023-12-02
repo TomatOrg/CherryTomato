@@ -246,7 +246,7 @@ void st7789_blit(uint16_t *buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t 
     target_st7789_write_byte(yend & 0xFF);
 
     st7789_write_command(ST7789_RAMWR);
-    target_st7789_write_bytes((const uint8_t*)buffer, w*h*2);
+    target_st7789_write_bytes((const uint8_t*)buffer, w * h * 2);
 }
 
 void st7789_set_vertical_scrolloff(uint16_t scrolloff) {

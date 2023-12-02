@@ -29,7 +29,10 @@ int g_pitch = 0;
 
 // --------------------------------------------------------
 
+__attribute__((aligned(4)))
 static uint16_t m_dmaA[240 * (NLINES + 1)];
+
+__attribute__((aligned(4)))
 static uint16_t m_dmaB[240 * (NLINES + 1)];
 
 void target_set_vertical_scrolloff(uint16_t scrolloff);
