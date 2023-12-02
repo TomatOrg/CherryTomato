@@ -92,7 +92,7 @@ static void st7789_write_command(uint8_t c) {
 
 static void st7789_init_color_format() {
     st7789_write_command(ST7789_MADCTL);
-    target_st7789_write_byte(0x08 | 0x40);
+    target_st7789_write_byte(0x08);
 
     st7789_write_command(0xB6);
     target_st7789_write_byte(0x0A);
@@ -179,7 +179,7 @@ void st7789_init() {
     st7789_init_power();
     st7789_init_gamma();
 
-    st7789_write_command(ST7789_INVOFF);
+    st7789_write_command(ST7789_INVON);
 
     st7789_write_command(ST7789_CASET);
     target_st7789_write_byte(0x00);

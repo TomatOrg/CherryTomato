@@ -258,6 +258,7 @@ void spi_init(
  */
 static void spi_write_blocking(spi_t* spi, const uint8_t* buf, size_t len) {
     const uint32_t* data = (uint32_t*)buf;
+    ASSERT((len % 4) == 0);
 
     // if we have more than 63 bytes then go into a loop
     // doing a nice big upload
@@ -297,10 +298,7 @@ static void spi_write_blocking(spi_t* spi, const uint8_t* buf, size_t len) {
         SPI_MOSI_DLEN(spi) = (len * 8) - 1;
 
         // write at a dword granularity
-        // NOTE: we are technically possibly going over the limit
-        //       but that is fine, we will just have some chunk inside
-        //       of the spi buffer but we will not actually send it
-        for (int i = 0; i <= len; i += 4) {
+        for (int i = 0; i < len; i += 4) {
             SPI_W(spi, i) = *data++;
         }
 
