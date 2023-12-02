@@ -9,3 +9,4 @@ typedef struct ui_timer {
 #define TIMERS_MAX 16
 extern ui_timer_t timers[TIMERS_MAX];
 extern int timers_count;
+void timer_add(ui_timer_t* t);

@@ -175,7 +175,7 @@ void timer_draw(int top) {
 static bool m_is_buttonpress = false;
 static bool m_closing_animation = false;
 static uint64_t m_closing_animation_start;
-static bool m_closing_animation_oldy;
+static int m_closing_animation_oldy;
 
 void timer_handle(ui_event_t *e) {
     int start, lines;
@@ -235,7 +235,7 @@ void timer_handle(ui_event_t *e) {
     if (e->type == UI_EVENT_TOUCH && (e->touchevent.action == TOUCHACTION_DOWN || e->touchevent.action == TOUCHACTION_UP)) {
         // roundedrect(160, g_top + 169, 50, 50, 20 | (40 << 5) | (20 << 11));
         int tx = e->touchevent.x, ty = m_timer_inertial.scroll + e->touchevent.y;
-        bool pressed = tx >= 160 && tx < 160+50 && ty >= 169 && ty < 169+50;
+        bool pressed = tx >= 16-10 && tx < 160+50+10 && ty >= 169-10 && ty < 169+50+10;
         if (pressed && e->touchevent.action == TOUCHACTION_DOWN) m_is_buttonpress = true;
         if (e->touchevent.action == TOUCHACTION_UP) {
             int h, m;
