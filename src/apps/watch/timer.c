@@ -177,6 +177,7 @@ static bool m_closing_animation = false;
 static uint64_t m_closing_animation_start;
 static int m_closing_animation_oldy;
 static bool m_pressed = false;
+static bool m_inhibit_starting_scroll = false;
 
 void timer_handle(ui_event_t *e) {
     int start, lines;
@@ -194,6 +195,10 @@ void timer_handle(ui_event_t *e) {
 
         if (tx >= 0 && tx < 120) { col = 0; }
         if (tx >= 120 && tx < 240) { col = 1; }
+
+        if (row == 0) {
+            m_inhibit_starting_scroll = true;
+        }
 
         if (col != -1 && row != -1) {
             if (row == 0) {
@@ -221,7 +226,6 @@ void timer_handle(ui_event_t *e) {
                     plat_update(0, start + l, 240, g_nlines);
                 }
             }
-
             m_prevtime = -1; // need to redraw text
             draw_hinttext();
         }
@@ -252,13 +256,17 @@ void timer_handle(ui_event_t *e) {
                 m_closing_animation_start = get_system_time() / 1000;
             }
             m_is_buttonpress = false;
+            m_inhibit_starting_scroll = false;
         }
     }
 
     if (m_curr_selected == -1 && !m_pressed) {
-        handle_inertial(&m_timer_inertial, e);
-        ui_update_scrolloff(g_top + m_timer_inertial.scroll, &start, &lines);
-        is_viewscroll = true;
+        bool should_not_start = (m_timer_inertial.type == SCROLL_NONE && m_inhibit_starting_scroll);
+        if (!should_not_start) {
+            handle_inertial(&m_timer_inertial, e);
+            ui_update_scrolloff(g_top + m_timer_inertial.scroll, &start, &lines);
+            is_viewscroll = true;
+        }
     }
 
     if (m_curr_selected != -1) {

@@ -59,7 +59,8 @@ void roundedrect_round(int topx, int topy, int w, int h, int r, uint16_t col) {
                 for (int i = -extendx / 2; i < extendx / 2; i++) g_target[j * g_pitch + l + i] = __builtin_bswap16(col);
             }
         } else {
-            for (int i = 1; i < w; i++) g_target[j * g_pitch + topx + i] = __builtin_bswap16(col);
+            int max = w % 2 ? (w - 1) : w;
+            for (int i = 1; i < max; i++) g_target[j * g_pitch + topx + i] = __builtin_bswap16(col);
         }
     }
 }
