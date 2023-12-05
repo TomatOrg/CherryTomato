@@ -33,7 +33,7 @@ void timer_add(ui_timer_t* t) {
 
 static int m_timers_scrolloff[2] = {0, 0};
 static int m_curr_selected = -1;
-static inertial_state_t m_timer_inertial = {.has_top_constraint = 0, .has_bottom_constraint = 1};
+static inertial_state_t m_timer_inertial = {.has_top_constraint = 1, .has_bottom_constraint = 1};
 static inertial_state_t m_scrollbar_inertial = {.round = true};
 
 void draw_scrollbar(bool wraparound, int x, int timer_scrolloff, int top) {
@@ -345,9 +345,16 @@ void timer_handle(ui_event_t *e) {
             g_line = start + l;
             g_nlines = MIN(lines - l, NLINES);
             memset(g_target, 0, 240 * 2 * NLINES);
-            timer_draw(g_top);
             watchface_draw(g_top + 240);
+            timer_draw(g_top);
+            applist_draw(g_top - 240);
             plat_update(0, start + l, 240, g_nlines);
+        }
+
+        if (m_timer_inertial.type == SCROLL_NONE && m_timer_inertial.scroll == -240) {
+            g_handler = applist_handle;
+            m_timer_inertial.scroll = 0;
+            g_top -= 240;
         }
 
         if (m_timer_inertial.type == SCROLL_NONE && m_timer_inertial.scroll == 240) {

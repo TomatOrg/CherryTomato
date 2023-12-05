@@ -2,6 +2,8 @@
 #include "event.h"
 
 typedef void handler_t(ui_event_t *e);
+typedef void drawer_t(int top);
+
 void ui_update_scrolloff(int newscrolloff, int *start, int *lines);
 extern handler_t *g_handler;
 extern int g_top;
