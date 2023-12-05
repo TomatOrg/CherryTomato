@@ -144,6 +144,9 @@ void draw_hinttext() {
 
 
 void timer_draw(int top) {
+    int real_nlines = g_nlines;
+    g_nlines = MIN(g_line + g_nlines, top + 240) - g_line;
+
     draw_scrollbar(false, 90 - 70, m_timers_scrolloff[0], top);
     draw_scrollbar(true, 90, m_timers_scrolloff[1], top);
 
@@ -170,6 +173,8 @@ void timer_draw(int top) {
 
     roundedrect(160, top + 169, 50, 50, 10 | (20 << 5) | (10 << 11));
     text_drawline(font_roboto, "+", 180, top + 200);
+
+    g_nlines = real_nlines;
 }
 
 static bool m_is_buttonpress = false;
