@@ -21,8 +21,15 @@
 
 inertial_state_t m_applist_inertial = {.has_top_constraint = 1, .has_bottom_constraint = 1};
 
+static const uint16_t gray = 7 | (14 << 5) | (7 << 11);
+static const uint16_t green = 10 | (45 << 5) | (2 << 11);
+
+uint8_t *icon_array[2][3] = {
+    { icon_timernew, icon_timeredit, icon_lightbulb, },
+    { icon_moon, icon_bell_crossed, NULL }
+};
+
 void applist_draw(int top) {
-    uint64_t gray = 11 | (22 << 5) | (11 << 11);
     roundedrect(12, top + 20, 64, 64, gray);
     text_drawicon(icon_timernew, 12, top + 20);
     roundedrect(87, top + 20, 64, 64, gray);
@@ -30,12 +37,11 @@ void applist_draw(int top) {
     roundedrect(162, top + 20, 64, 64, gray);
     text_drawicon(icon_lightbulb, 162, top + 20);
 
-    roundedrect(12, top + 94, 64, 64, gray);
-    text_drawicon(icon_moon, 12, top + 94);
-    roundedrect(87, top + 94, 64, 64, gray);
-    text_drawicon(icon_bell_crossed, 87, top + 94);
-
-    roundedrect(162, top + 94, 64, 64, gray);
+    roundedrect(12, top + 95, 64, 64, gray);
+    text_drawicon(icon_moon, 12, top + 95);
+    roundedrect(87, top + 95, 64, 64, gray);
+    text_drawicon(icon_bell_crossed, 87, top + 95);
+    roundedrect(162, top + 95, 64, 64, gray);
 }
 
 
@@ -45,6 +51,11 @@ static handler_t* m_new_handler;
 static bool m_closing_animation = false;
 static uint64_t m_closing_animation_start;
 static int m_closing_animation_oldy;
+
+static int m_startx;
+static int m_starty;
+
+static bool m_state[3] = {};
 
 void applist_handle(ui_event_t *e) {
     int start, lines;
@@ -57,13 +68,39 @@ void applist_handle(ui_event_t *e) {
     if (!m_closing_animation) {
         handle_inertial(&m_applist_inertial, e);
         ui_update_scrolloff(g_top + m_applist_inertial.scroll, &start, &lines);
-
+        if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_DOWN) {
+            m_startx = e->touchevent.x;
+            m_starty = e->touchevent.y;
+        }
         if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP) {
-            m_new_drawer = timer_draw;
-            m_new_handler = timer_handle;
-            m_closing_animation = true;
-            m_closing_animation_oldy = 0;
-            m_closing_animation_start = get_system_time() / 1000;
+            int dx = e->touchevent.x - m_startx, dy = e->touchevent.y - m_starty;
+            if (dx*dx + dy*dy < 4*4) {
+                int bx = (e->touchevent.x - 12) / 75;
+                int by = (e->touchevent.y - 20) / 75;
+                if ((bx==0&&by==0) || (bx==1&&by==0)) {
+                    m_new_drawer = timer_draw;
+                    m_new_handler = timer_handle;
+                    m_closing_animation = true;
+                    m_closing_animation_oldy = 0;
+                    m_closing_animation_start = get_system_time() / 1000;
+                }
+
+                if (by==1) {
+                    m_state[bx] = !m_state[bx];
+                    // TODO: do an animation to draw in a square
+                    g_pitch = 64;
+                    int start = g_top + 20 + by * 75;
+                    int lines = 64;
+                    for (int l = 0; l < lines; l += NLINES) {
+                        g_line = start + l;
+                        g_nlines = MIN(lines - l, NLINES);
+                        memset(g_target, 0, 240 * 2 * NLINES);
+                        roundedrect(0, g_top + 20 + by * 75, 64, 64, m_state[bx] ? green : gray);
+                        if (icon_array[by][bx]) text_drawicon(icon_array[by][bx], 0, g_top + 20 + by * 75);
+                        plat_update(12 + bx * 75, g_line, 64, g_nlines);
+                    }
+                }
+            }
         }
 
         g_pitch = 240;
