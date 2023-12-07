@@ -1,4 +1,5 @@
 #include "plat.h"
+#include "apps/entry.h"
 #include "apps/watch/ui.h"
 #include "event.h"
 #include <util/divmod.h>
@@ -58,6 +59,13 @@ void plat_update(int x, int y, int w, int h) {
     }
 }
 
+
+static void watch_loop();
+
+static int m_oldx, m_oldy;
+static bool m_oldpressed;
+static uint64_t m_prevframe;
+
 void watch_main() {
     g_target = m_dmaA;
     ui_init();
@@ -66,61 +74,57 @@ void watch_main() {
     ui_event_t uie = {.type = UI_EVENT_REDRAW};
     g_handler(&uie);
 
-    int oldx, oldy;
-    bool oldpressed;
-    target_touch(&oldpressed, &oldx, &oldy);
-    uint64_t prevframe = (get_system_time() / 1000);
+    target_touch(&m_oldpressed, &m_oldx, &m_oldy);
+    m_prevframe = (get_system_time() / 1000);
 
-    while (true) {
-        // TODO: check if the timer is actually done lol
-        if (timers_count > 0) {
-            ui_event_t uie = {.type = UI_EVENT_REDRAW};
-            g_handler = alarmdone_handle;
-            g_handler(&uie);
-        }
+    start_event_loop(watch_loop, NULL);
+}
 
-        uint64_t starttime = (get_system_time() / 1000);
-
-        bool up = false, down = false;
-
-        int x, y;
-        bool pressed = false;
-        target_touch(&pressed, &x, &y);
-
-        if (oldpressed && !pressed) up = true;
-        else if (!oldpressed && pressed) down = true;
-
-        ui_event_t uie = {.type = UI_EVENT_FRAME};
-        if (down || pressed) {
-            uie.type = UI_EVENT_TOUCH;
-            uie.touchevent.x = x;
-            uie.touchevent.y = y;
-            uie.touchevent.dt = (starttime - prevframe) / 1000.0;
-            uie.touchevent.dx = x - oldx;
-            uie.touchevent.dy = y - oldy;
-        }
-        if (up) {
-            uie.type = UI_EVENT_TOUCH;
-            uie.touchevent.x = oldx;
-            uie.touchevent.y = oldy;
-            uie.touchevent.dt = (starttime - prevframe) / 1000.0;
-            uie.touchevent.dx = 0;
-            uie.touchevent.dy = 0;
-        }
-        if (down) uie.touchevent.action = TOUCHACTION_DOWN;
-        else if (up) uie.touchevent.action = TOUCHACTION_UP;
-        else if (pressed) uie.touchevent.action = TOUCHACTION_CONTACT;
-
+static void watch_loop() {
+    // TODO: check if the timer is actually done lol
+    if (timers_count > 0) {
+        ui_event_t uie = {.type = UI_EVENT_REDRAW};
+        g_handler = alarmdone_handle;
         g_handler(&uie);
-        target_set_vertical_scrolloff(floormod(g_scrolloff, 320));
-
-        uint64_t after = (get_system_time() / 1000);
-        uint64_t delta = after - starttime;
-        if (delta < 16) { udelay(1000 * (16 - delta)); }
-
-        oldx = x;
-        oldy = y;
-        oldpressed = pressed;
-        prevframe = starttime;
     }
+
+    uint64_t starttime = (get_system_time() / 1000);
+
+    bool up = false, down = false;
+
+    int x, y;
+    bool pressed = false;
+    target_touch(&pressed, &x, &y);
+
+    if (m_oldpressed && !pressed) up = true;
+    else if (!m_oldpressed && pressed) down = true;
+
+    ui_event_t uie = {.type = UI_EVENT_FRAME};
+    if (down || pressed) {
+        uie.type = UI_EVENT_TOUCH;
+        uie.touchevent.x = x;
+        uie.touchevent.y = y;
+        uie.touchevent.dt = (starttime - m_prevframe) / 1000.0;
+        uie.touchevent.dx = x - m_oldx;
+        uie.touchevent.dy = y - m_oldy;
+    }
+    if (up) {
+        uie.type = UI_EVENT_TOUCH;
+        uie.touchevent.x = m_oldx;
+        uie.touchevent.y = m_oldy;
+        uie.touchevent.dt = (starttime - m_prevframe) / 1000.0;
+        uie.touchevent.dx = 0;
+        uie.touchevent.dy = 0;
+    }
+    if (down) uie.touchevent.action = TOUCHACTION_DOWN;
+    else if (up) uie.touchevent.action = TOUCHACTION_UP;
+    else if (pressed) uie.touchevent.action = TOUCHACTION_CONTACT;
+
+    g_handler(&uie);
+    target_set_vertical_scrolloff(floormod(g_scrolloff, 320));
+
+    m_oldx = x;
+    m_oldy = y;
+    m_oldpressed = pressed;
+    m_prevframe = starttime;
 }

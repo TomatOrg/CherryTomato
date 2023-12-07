@@ -8,10 +8,11 @@
 #include <util/divmod.h>
 
 static SDL_Window *win;
-static SDL_Window *win2;
 static SDL_Surface *winsurf;
+#ifndef __EMSCRIPTEN__
+static SDL_Window *win2;
 static SDL_Surface *win2surf;
-
+#endif
 void target_entry(void) {
     err_t err = NO_ERROR;
 
@@ -20,16 +21,19 @@ void target_entry(void) {
     assert(SDL_Init(SDL_INIT_VIDEO) >= 0);
     assert(SDL_Init(SDL_INIT_EVENTS) >= 0);
     assert(SDL_Init(SDL_INIT_TIMER) >= 0);
+
+#ifndef __EMSCRIPTEN__
     win2 = SDL_CreateWindow("CherryTomato Debug", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 240, 320, 0);
     assert(win2);
+    win2surf = SDL_GetWindowSurface(win2);
+    assert(win2surf);
+#endif
 
     win = SDL_CreateWindow("CherryTomato", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 240, 240, 0);
     assert(win);
-
     winsurf = SDL_GetWindowSurface(win);
     assert(winsurf);
-    win2surf = SDL_GetWindowSurface(win2);
-    assert(win2surf);
+
 
 cleanup:
     if (IS_ERROR(err)) {
@@ -68,7 +72,7 @@ static void sdl_update() {
     }
     SDL_UnlockSurface(winsurf);
     SDL_UpdateWindowSurface(win);
-
+#ifndef __EMSCRIPTEN__
     SDL_LockSurface(win2surf);
     for (int i = 0; i < 320; i++) {
         for (int j = 0; j < 240; j++) {
@@ -82,6 +86,7 @@ static void sdl_update() {
     }
     SDL_UnlockSurface(win2surf);
     SDL_UpdateWindowSurface(win2);
+#endif
 }
 
 void target_set_vertical_scrolloff(uint16_t scrolloff) { target_scrolloff = scrolloff; }

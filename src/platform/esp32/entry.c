@@ -7,6 +7,7 @@
 #include "hardware/dport.h"
 
 #include <util/log.h>
+#include "task/time.h"
 
 // rom functions needed for ram init
 void mmu_init(int cpu_no);
@@ -123,4 +124,15 @@ void entry() {
 
     // setup the timer interrupt
     cherry_tomato_entry();
+}
+
+
+void start_event_loop(loop_fn_t* fn, void* arg) {
+    while (true) {
+        uint64_t starttime = get_system_time();
+        fn(arg);
+        uint64_t after = get_system_time();
+        uint64_t delta = after - starttime;
+        if (delta < 16 * 1000) { udelay(16 * 1000 - delta); }
+    }
 }
