@@ -22,9 +22,19 @@ extern uint8_t _bebas2[];
 extern uint8_t _bebas3[];
 extern uint8_t _bebas4[];
 extern uint8_t _roboto[];
+extern uint8_t _timernew[];
+extern uint8_t _timeredit[];
+extern uint8_t _lightbulb[];
+extern uint8_t _moon[];
+extern uint8_t _bell_crossed[];
 
 #define font_bebas1 ((font_info_t*)_bebas1)
 #define font_bebas2 ((font_info_t*)_bebas2)
 #define font_bebas3 ((font_info_t*)_bebas3)
 #define font_bebas4 ((font_info_t*)_bebas4)
 #define font_roboto ((font_info_t*)_roboto)
+#define icon_timernew (_timernew)
+#define icon_timeredit (_timeredit)
+#define icon_lightbulb (_lightbulb)
+#define icon_moon (_moon)
+#define icon_bell_crossed (_bell_crossed)

@@ -31,6 +31,56 @@ int text_advance(font_info_t *chinfo, int chidx) {
     return ch->advance;
 }
 
+void text_drawicon(uint8_t* data, int x, int y) {
+    // TODO: UB
+    int width = *(uint16_t*)data;
+    int height = *(uint16_t*)(data + 2);
+    uint8_t* lines = data + 4;
+
+    int start = MAX(g_line, y);
+    int end = MIN(g_line + g_nlines, y + height);
+
+    int rleoff = height;
+    for (int i = 0; i < MIN(height, start - y); i++) rleoff += lines[i];
+
+    for (int l = start; l < end; l++) {
+        int entries_read = 2 * (4 - rleoff % 4);
+        uint32_t *data = (uint32_t*)(lines + rleoff - rleoff % 4);
+        uint32_t bitbuffer = *data++;
+        bitbuffer >>= (rleoff % 4) * 8;
+
+        for (int i = 0; i < width;) {
+            uint8_t intensity;
+            {
+                intensity = bitbuffer & 0xF;
+                bitbuffer >>= 4;
+                if (--entries_read == 0) {
+                    entries_read = 8;
+                    bitbuffer = *data++;
+                }
+            }
+            uint8_t count = 1;
+            if (intensity == 0 || intensity == 15) {
+                count = bitbuffer & 0xF;
+                bitbuffer >>= 4;
+                if (--entries_read == 0) {
+                    entries_read = 8;
+                    bitbuffer = *data++;
+                }
+            }
+            for (int j = 0; j < count; j++) {
+                uint16_t v = __builtin_bswap16(g_target[g_pitch * (l - g_line) + x + i]);
+                uint8_t r = (v & 31), g = ((v >> 5) & 63), b = ((v >> 11) & 31);
+                uint8_t newr = r + (31 - r) * intensity / 16;
+                uint8_t newg = g + (63 - g) * intensity / 16;
+                uint8_t newb = b + (31 - b) * intensity / 16;
+                g_target[g_pitch * (l - g_line) + x + i++] = __builtin_bswap16((newr << 0) | (newg << 5) | (newb << 11));
+            }
+        }
+        rleoff += lines[l - y];
+    }
+}
+
 int text_drawchar(font_info_t *chinfo, int chidx, int x, int basey) {
     font_charinfo_t *ch = (void *)(chinfo->storage + chidx * sizeof(font_charinfo_t));
     uint8_t *atlas = (void *)(chinfo->storage + chinfo->count * sizeof(font_charinfo_t));
@@ -76,7 +126,7 @@ int text_drawchar(font_info_t *chinfo, int chidx, int x, int basey) {
             }
             for (int j = 0; j < count; j++) {
                 uint16_t v = __builtin_bswap16(g_target[g_pitch * (l - g_line) + x + i]);
-uint8_t r = (v & 31), g = ((v >> 5) & 63), b = ((v >> 11) & 31);
+                uint8_t r = (v & 31), g = ((v >> 5) & 63), b = ((v >> 11) & 31);
                 uint8_t newr = r + (31 - r) * intensity / 16;
                 uint8_t newg = g + (63 - g) * intensity / 16;
                 uint8_t newb = b + (31 - b) * intensity / 16;

@@ -24,11 +24,17 @@ inertial_state_t m_applist_inertial = {.has_top_constraint = 1, .has_bottom_cons
 void applist_draw(int top) {
     uint64_t gray = 11 | (22 << 5) | (11 << 11);
     roundedrect(12, top + 20, 64, 64, gray);
+    text_drawicon(icon_timernew, 12, top + 20);
     roundedrect(87, top + 20, 64, 64, gray);
+    text_drawicon(icon_timeredit, 87, top + 20);
     roundedrect(162, top + 20, 64, 64, gray);
+    text_drawicon(icon_lightbulb, 162, top + 20);
 
     roundedrect(12, top + 94, 64, 64, gray);
+    text_drawicon(icon_moon, 12, top + 94);
     roundedrect(87, top + 94, 64, 64, gray);
+    text_drawicon(icon_bell_crossed, 87, top + 94);
+
     roundedrect(162, top + 94, 64, 64, gray);
 }
 
