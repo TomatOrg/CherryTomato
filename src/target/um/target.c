@@ -57,7 +57,7 @@ static uint16_t framebuffer[240 * 320];
 static int target_scrolloff;
 
 static void sdl_update() {
-    int dmastartpos = floormod(target_scrolloff, 320);
+    int dmastartpos = target_scrolloff;
 
     SDL_LockSurface(winsurf);
     for (int i = 0; i < 240; i++) {
@@ -89,7 +89,12 @@ static void sdl_update() {
 #endif
 }
 
-void target_set_vertical_scrolloff(uint16_t scrolloff) { target_scrolloff = scrolloff; }
+void target_set_vertical_scrolloff(uint16_t scrolloff) {
+    if (target_scrolloff != scrolloff) {
+        target_scrolloff = scrolloff;
+        sdl_update();
+    }
+}
 void target_blit(uint16_t *buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     for (int i = 0; i < h; i++) {
         for (int j = 0; j < w; j++) {
