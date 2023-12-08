@@ -14,9 +14,10 @@
 #include "plat.h"
 #include "task/time.h"
 #include "text.h"
-#include "thumbnail.h"
+#include "gesturerecognizer.h"
 #include "roundedrect.h"
 #include "ui.h"
+#include "util/log.h"
 #include <util/divmod.h>
 
 inertial_state_t m_applist_inertial = {.has_top_constraint = 1, .has_bottom_constraint = 1};
@@ -52,9 +53,6 @@ static bool m_closing_animation = false;
 static uint64_t m_closing_animation_start;
 static int m_closing_animation_oldy;
 
-static int m_startx;
-static int m_starty;
-
 static bool m_state[3] = {};
 
 void applist_handle(ui_event_t *e) {
@@ -65,44 +63,17 @@ void applist_handle(ui_event_t *e) {
         lines = 240;
     }
 
-    if (!m_closing_animation) {
+    bool recognized, vertical, tap;
+    int startx, starty;
+    gesture_recognizer(e, &recognized, &vertical, &tap, &startx, &starty);
+
+    bool starting_vertical = (recognized && vertical);
+    bool in_scroll = m_applist_inertial.type != SCROLL_NONE;
+    bool is_vertical_movement = !m_closing_animation && (starting_vertical || in_scroll);
+
+    if (is_vertical_movement) {
         handle_inertial(&m_applist_inertial, e);
         ui_update_scrolloff(g_top + m_applist_inertial.scroll, &start, &lines);
-        if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_DOWN) {
-            m_startx = e->touchevent.x;
-            m_starty = e->touchevent.y;
-        }
-        if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP) {
-            int dx = e->touchevent.x - m_startx, dy = e->touchevent.y - m_starty;
-            if (dx*dx + dy*dy < 4*4) {
-                int bx = (e->touchevent.x - 12) / 75;
-                int by = (e->touchevent.y - 20) / 75;
-                if ((bx==0&&by==0) || (bx==1&&by==0)) {
-                    m_new_drawer = timer_draw;
-                    m_new_handler = timer_handle;
-                    m_closing_animation = true;
-                    m_closing_animation_oldy = 0;
-                    m_closing_animation_start = get_system_time() / 1000;
-                }
-
-                if (by==1) {
-                    m_state[bx] = !m_state[bx];
-                    // TODO: do an animation to draw in a square
-                    g_pitch = 64;
-                    int start = g_top + 20 + by * 75;
-                    int lines = 64;
-                    for (int l = 0; l < lines; l += NLINES) {
-                        g_line = start + l;
-                        g_nlines = MIN(lines - l, NLINES);
-                        memset(g_target, 0, 240 * 2 * NLINES);
-                        roundedrect(0, g_top + 20 + by * 75, 64, 64, m_state[bx] ? green : gray);
-                        if (icon_array[by][bx]) text_drawicon(icon_array[by][bx], 0, g_top + 20 + by * 75);
-                        plat_update(12 + bx * 75, g_line, 64, g_nlines);
-                    }
-                }
-            }
-        }
-
         g_pitch = 240;
         for (int l = 0; l < lines; l += NLINES) {
             g_line = start + l;
@@ -123,6 +94,45 @@ void applist_handle(ui_event_t *e) {
             g_handler = watchface_handle;
             m_applist_inertial.scroll = 0;
             g_top += 240;
+        }
+    }
+
+
+    if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP && tap) {
+        int bx = (e->touchevent.x - 12) / 75;
+        int by = (e->touchevent.y - 20) / 75;
+        if ((bx==0 && by==0) || (bx==1 && by==0)) {
+            m_new_drawer = timer_draw;
+            m_new_handler = timer_handle;
+            m_closing_animation = true;
+            m_closing_animation_oldy = 0;
+            m_closing_animation_start = get_system_time() / 1000;
+        }
+
+        if (by==1) {
+            m_state[bx] = !m_state[bx];
+            // TODO: do an animation to draw in a square
+            g_pitch = 64;
+            int start = g_top + 20 + by * 75;
+            int lines = 64;
+            for (int l = 0; l < lines; l += NLINES) {
+                g_line = start + l;
+                g_nlines = MIN(lines - l, NLINES);
+                memset(g_target, 0, 240 * 2 * NLINES);
+                roundedrect(0, g_top + 20 + by * 75, 64, 64, m_state[bx] ? green : gray);
+                if (icon_array[by][bx]) text_drawicon(icon_array[by][bx], 0, g_top + 20 + by * 75);
+                plat_update(12 + bx * 75, g_line, 64, g_nlines);
+            }
+        }
+
+        g_pitch = 240;
+        for (int l = 0; l < lines; l += NLINES) {
+            g_line = start + l;
+            g_nlines = MIN(lines - l, NLINES);
+            memset(g_target, 0, 240 * 2 * NLINES);
+            applist_draw(g_top + 0);
+            watchface_draw(g_top + 240);
+            plat_update(0, g_line, 240, g_nlines);
         }
     }
 
