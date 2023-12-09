@@ -27,6 +27,7 @@ extern uint8_t _timeredit[];
 extern uint8_t _lightbulb[];
 extern uint8_t _moon[];
 extern uint8_t _bell_crossed[];
+extern uint8_t _calculator[];
 
 #define font_bebas1 ((font_info_t*)_bebas1)
 #define font_bebas2 ((font_info_t*)_bebas2)
@@ -38,3 +39,4 @@ extern uint8_t _bell_crossed[];
 #define icon_lightbulb (_lightbulb)
 #define icon_moon (_moon)
 #define icon_bell_crossed (_bell_crossed)
+#define icon_calculator (_calculator)

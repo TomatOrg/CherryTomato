@@ -26,8 +26,8 @@ static const uint16_t gray = 7 | (14 << 5) | (7 << 11);
 static const uint16_t green = 10 | (45 << 5) | (2 << 11);
 
 uint8_t *icon_array[2][3] = {
-    { icon_timernew, icon_timeredit, icon_lightbulb, },
-    { icon_moon, icon_bell_crossed, NULL }
+    { icon_timernew, icon_timeredit, icon_calculator },
+    { icon_moon, icon_bell_crossed, icon_lightbulb }
 };
 
 void applist_draw(int top) {
@@ -36,13 +36,15 @@ void applist_draw(int top) {
     roundedrect(87, top + 20, 64, 64, gray);
     text_drawicon(icon_timeredit, 87, top + 20);
     roundedrect(162, top + 20, 64, 64, gray);
-    text_drawicon(icon_lightbulb, 162, top + 20);
+    text_drawicon(icon_calculator, 162, top + 20);
 
     roundedrect(12, top + 95, 64, 64, gray);
     text_drawicon(icon_moon, 12, top + 95);
     roundedrect(87, top + 95, 64, 64, gray);
     text_drawicon(icon_bell_crossed, 87, top + 95);
     roundedrect(162, top + 95, 64, 64, gray);
+    text_drawicon(icon_lightbulb, 162, top + 95);
+
 }
 
 

@@ -115,17 +115,7 @@ $(BUILD_DIR)/%.S.o: %.S
 
 $(BUILD_DIR)/res/fonts.o: $(BUILD_DIR)/res/BebasNeue.ttf $(BUILD_DIR)/res/Roboto.ttf
 	@mkdir -p $(@D)
-	@python src/scripts/fontconv.py assets/ $(BUILD_DIR)/res
-	@cd $(BUILD_DIR)/res/; xxd -i _roboto > fonts.c
-	@cd $(BUILD_DIR)/res/; xxd -i _bebas1 >> fonts.c
-	@cd $(BUILD_DIR)/res/; xxd -i _bebas2 >> fonts.c
-	@cd $(BUILD_DIR)/res/; xxd -i _bebas3 >> fonts.c
-	@cd $(BUILD_DIR)/res/; xxd -i _bebas4 >> fonts.c
-	@cd $(BUILD_DIR)/res/; xxd -i _timernew >> fonts.c
-	@cd $(BUILD_DIR)/res/; xxd -i _timeredit >> fonts.c
-	@cd $(BUILD_DIR)/res/; xxd -i _lightbulb >> fonts.c
-	@cd $(BUILD_DIR)/res/; xxd -i _moon >> fonts.c
-	@cd $(BUILD_DIR)/res/; xxd -i _bell_crossed >> fonts.c
+	@python src/scripts/assetconv.py assets/ $(BUILD_DIR)/res $(BUILD_DIR)/res/fonts.c
 	$(CC) -Wall $(CFLAGS) -MMD -c $(BUILD_DIR)/res/fonts.c -o $(BUILD_DIR)/res/fonts.o
 
 $(BUILD_DIR)/res/BebasNeue.ttf:

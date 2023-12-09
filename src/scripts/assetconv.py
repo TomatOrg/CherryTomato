@@ -12,6 +12,15 @@ def bitwrite(bitstring, data, bits):
     bitstring += (bin(data)[2:].zfill(bits))[::-1]
     return bitstring
 
+def dump(name, array):
+    string = "unsigned char _" + name + "[] = {"
+    for i, e in enumerate(array):
+        string += str(e)
+        if i != len(array) - 1:
+            string += ","
+    string += "};\n"
+    return string
+
 def comp(buffer, height, width, pitch):
     lines = b''
     currchar = b''
@@ -85,35 +94,38 @@ def conv(outpath, size, outname, usedchars):
     FT_Done_Face(face)
     FT_Done_FreeType(library)
 
-    out = open(outname, "wb")
-    out.write(out_array)
-    out.close()
+    return dump(outname, out_array)
 
-def convicon(inpath, x, y, w, h, outpath):
+def convicon(inpath, x, y, w, h, outname):
     image = Image.open(inpath)
     image = image.convert("L")
     data = list(image.getdata())
     lines, currchar = comp(data[(x*w + y*h*image.width)::], h, w, image.width)
     out_array = struct.pack('<HH', w, h) + bytes(lines + currchar)
     print(len(out_array))
-    out = open(outpath, "wb")
-    out.write(out_array)
-    out.close()
+    return dump(outname, out_array)
+
 
 def main():
     assetpath = sys.argv[1]
     outpath = sys.argv[2]
-    conv(outpath + "/BebasNeue.ttf", 180, outpath + "/_bebas1", "0123456789")
-    conv(outpath + "/BebasNeue.ttf", 86, outpath + "/_bebas2", "0123456789+:")
-    conv(outpath + "/BebasNeue.ttf", 32, outpath + "/_bebas3", " ABCDEFGHIJKLNMOPQRSTUVWXYZ0123456789")
-    conv(outpath + "/BebasNeue.ttf", 50, outpath + "/_bebas4", "0123456789+:")
-    conv(outpath + "/Roboto.ttf", 18, outpath + "/_roboto", " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ")
-    convicon(assetpath + "/icons.png", 0, 0, 64, 64, outpath + "/_timeredit")
-    convicon(assetpath + "/icons.png", 1, 0, 64, 64, outpath + "/_timernew")
-    convicon(assetpath + "/icons.png", 2, 0, 64, 64, outpath + "/_lightbulb")
-    convicon(assetpath + "/icons.png", 0, 1, 64, 64, outpath + "/_moon")
-    convicon(assetpath + "/icons.png", 1, 1, 64, 64, outpath + "/_bell_crossed")
+    outfile = sys.argv[3]
+    string = ""
+    string += conv(outpath + "/BebasNeue.ttf", 180, "bebas1", "0123456789")
+    string += conv(outpath + "/BebasNeue.ttf", 86, "bebas2", "0123456789+:")
+    string += conv(outpath + "/BebasNeue.ttf", 32, "bebas3", " ABCDEFGHIJKLNMOPQRSTUVWXYZ0123456789")
+    string += conv(outpath + "/BebasNeue.ttf", 50, "bebas4", "0123456789+:")
+    string += conv(outpath + "/Roboto.ttf", 18, "roboto", " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ")
+    string += convicon(assetpath + "/icons.png", 0, 0, 64, 64, "timeredit")
+    string += convicon(assetpath + "/icons.png", 1, 0, 64, 64, "timernew")
+    string += convicon(assetpath + "/icons.png", 2, 0, 64, 64, "calculator")
 
+    string += convicon(assetpath + "/icons.png", 0, 1, 64, 64, "moon")
+    string += convicon(assetpath + "/icons.png", 1, 1, 64, 64, "bell_crossed")
+    string += convicon(assetpath + "/icons.png", 2, 1, 64, 64, "lightbulb")
+    out = open(outfile, "w")
+    out.write(string)
+    out.close()
 
 
 if __name__ == "__main__":
