@@ -111,6 +111,14 @@ void applist_handle(ui_event_t *e) {
             m_closing_animation_start = get_system_time() / 1000;
         }
 
+        if (bx==2 && by==0){
+            m_new_drawer = calculator_draw;
+            m_new_handler = calculator_handle;
+            m_closing_animation = true;
+            m_closing_animation_oldy = 0;
+            m_closing_animation_start = get_system_time() / 1000;
+        }
+
         if (by==1) {
             m_state[bx] = !m_state[bx];
             // TODO: do an animation to draw in a square

@@ -16,7 +16,7 @@ TARGET 			?= ttgo-twatch-2020-v2
 OUT_DIR			:= out
 
 # The compiler flags
-CFLAGS 			:= -O0
+CFLAGS 			:= -O0 -g3
 CFLAGS 			+= -Wall -Werror
 CFLAGS 			+= -Wno-unused-label -Wno-unused-function
 CFLAGS 			+= -Isrc
@@ -40,6 +40,7 @@ SRCS			+= src/util/libm/libm.c
 SRCS			+= src/util/libm/ef_sqrt.c
 
 SRCS			+= src/apps/watch/timer.c
+SRCS			+= src/apps/watch/calculator.c
 SRCS			+= src/apps/watch/roundedrect.c
 SRCS			+= src/apps/watch/alarmdone.c
 SRCS			+= src/apps/watch/applist.c
