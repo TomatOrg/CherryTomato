@@ -110,11 +110,11 @@ void calculator_handle(ui_event_t *e) {
         int end = MAX(m_rubberband_prev_start + 40, y + 40);
         int lines = end - start;
         for (int l = 0; l < lines; l += NLINES) {
-            g_line = g_scrolloff + l + start - 28;
+            g_line = g_scrolloff + l + start - 20;
             g_nlines = MIN(lines - l, NLINES);
             memset(g_target, 0, 240 * 2 * NLINES);
-            roundedrect(0, g_scrolloff + y - 28, 40, 40, 10 | (20 << 5) | (10 << 11));
-            text_drawline(font_roboto, "V", 15, g_scrolloff + y);
+            roundedrect(0, g_scrolloff + y - 20, 40, 40, 10 | (20 << 5) | (10 << 11));
+            text_drawicon(icon_arrow_down, 0, g_scrolloff + y - 19);
             plat_update(100, g_line, 40, g_nlines);
         }
         m_rubberband_prev_start = y;

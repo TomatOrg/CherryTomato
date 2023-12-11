@@ -123,6 +123,9 @@ def main():
     string += convicon(assetpath + "/icons.png", 0, 1, 64, 64, "moon")
     string += convicon(assetpath + "/icons.png", 1, 1, 64, 64, "bell_crossed")
     string += convicon(assetpath + "/icons.png", 2, 1, 64, 64, "lightbulb")
+
+    string += convicon(assetpath + "/arrows.png", 0, 0, 40, 40, "arrow_down")
+
     out = open(outfile, "w")
     out.write(string)
     out.close()
