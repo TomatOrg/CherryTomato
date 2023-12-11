@@ -46,6 +46,7 @@ SRCS			+= src/apps/watch/alarmdone.c
 SRCS			+= src/apps/watch/applist.c
 SRCS			+= src/apps/watch/main.c
 SRCS			+= src/apps/watch/back.c
+SRCS			+= src/apps/watch/test.c
 SRCS			+= src/apps/watch/gesturerecognizer.c
 SRCS			+= src/apps/watch/thumbnail.c
 SRCS			+= src/apps/watch/plat.c

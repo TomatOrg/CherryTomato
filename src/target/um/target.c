@@ -92,8 +92,8 @@ static void sdl_update() {
 void target_set_vertical_scrolloff(uint16_t scrolloff) {
     if (target_scrolloff != scrolloff) {
         target_scrolloff = scrolloff;
-        sdl_update();
     }
+    sdl_update();
 }
 void target_blit(uint16_t *buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     for (int i = 0; i < h; i++) {
@@ -101,5 +101,4 @@ void target_blit(uint16_t *buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t 
             framebuffer[(x + j) + ((y + i) % 320) * 240] = __builtin_bswap16(buffer[i * w + j]);
         }
     }
-    sdl_update();
 }

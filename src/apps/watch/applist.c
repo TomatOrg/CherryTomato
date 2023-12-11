@@ -104,8 +104,8 @@ void applist_handle(ui_event_t *e) {
         int bx = (e->touchevent.x - 12) / 75;
         int by = (e->touchevent.y - 20) / 75;
         if ((bx==0 && by==0) || (bx==1 && by==0)) {
-            m_new_drawer = timer_draw;
-            m_new_handler = timer_handle;
+            m_new_drawer = test_draw;
+            m_new_handler = test_handle;
             m_closing_animation = true;
             m_closing_animation_oldy = 0;
             m_closing_animation_start = get_system_time() / 1000;
