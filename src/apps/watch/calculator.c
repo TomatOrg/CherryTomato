@@ -87,8 +87,44 @@ static uint64_t apply_op(uint64_t lhs, uint64_t rhs, op_t op) {
     return 0;
 }
 
+static bool m_back = false;
+static uint64_t m_back_start = 0;
+static int m_back_prev = 0;
+
+static int m_rubberband_prev_start = 0;
+static bool m_rubberband = false;
+
+static float rubberband(float x, float coeff, float dim) {
+    return (1.0 - (1.0 / ((x * coeff / dim) + 1.0))) * dim;
+}
+
 void calculator_handle(ui_event_t *e) {
+    if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_DOWN) {
+        m_rubberband = e->touchevent.y <= 20;
+    }
+
+    if (m_rubberband && e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_CONTACT) {
+        g_pitch = 40;
+        int y = rubberband(e->touchevent.y, 0.35, 240);
+        int start = MIN(m_rubberband_prev_start, y);
+        int end = MAX(m_rubberband_prev_start + 40, y + 40);
+        int lines = end - start;
+        for (int l = 0; l < lines; l += NLINES) {
+            g_line = g_scrolloff + l + start - 28;
+            g_nlines = MIN(lines - l, NLINES);
+            memset(g_target, 0, 240 * 2 * NLINES);
+            roundedrect(0, g_scrolloff + y - 28, 40, 40, 10 | (20 << 5) | (10 << 11));
+            text_drawline(font_roboto, "V", 15, g_scrolloff + y);
+            plat_update(100, g_line, 40, g_nlines);
+        }
+        m_rubberband_prev_start = y;
+    }
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP) {
+        if (m_rubberband) {
+            m_back = true;
+            m_back_start = get_system_time() / 1000;
+        }
+
         int bx = (e->touchevent.x - 40 + 25) / 50;
         int by = (e->touchevent.y - 90 + 20) / 40;
 
@@ -99,6 +135,14 @@ void calculator_handle(ui_event_t *e) {
             }
             int number = (2 - by) * 3 + 1 + bx;
             m_num = m_num * 10 + number;
+        }
+
+        if (by == 3 && bx == 0) {
+            if (m_start_new) {
+                m_num = 0;
+                m_start_new = false;
+            }
+            m_num *= 10;
         }
 
         if (bx == 3 && by >= 0 && by < 4) {
@@ -128,5 +172,28 @@ void calculator_handle(ui_event_t *e) {
             draw_text(32, g_top + 0);
             plat_update(32, g_line, 200-32, g_nlines);
         }
+    }
+
+    if (m_back) {
+        float t = ((get_system_time() / 1000) - m_back_start) / 1000.0;
+        t *= 8.0;
+        float off = 240 - spring_ex(240, 0, t, 10, 1);
+        int y = off;
+        if (y >= 239) {
+            y = 240;
+            m_back = false;
+            g_top = g_scrolloff;
+            g_handler = watchface_handle;
+        }
+        int lines = y - m_back_prev;
+        g_pitch = 240;
+        for (int l = 0; l < lines; l += NLINES) {
+            g_line = g_scrolloff + m_back_prev + l;
+            g_nlines = MIN(lines - l, NLINES);
+            memset(g_target, 0, 240 * 2 * NLINES);
+            watchface_draw(g_scrolloff);
+            plat_update(0, g_line, 240, g_nlines);
+        }
+        m_back_prev = y;
     }
 }
