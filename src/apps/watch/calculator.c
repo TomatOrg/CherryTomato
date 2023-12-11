@@ -35,6 +35,7 @@ static int m_total = 0;
 static op_t m_operation;
 static uint64_t m_num;
 static bool m_start_new = true;
+static bool m_first = true;
 
 void drawbutton(const char* str, int x, int y, int top) {
     int size = text_getlinesize(font_roboto, str);
@@ -119,7 +120,12 @@ void calculator_handle(ui_event_t *e) {
                 m_total = m_num;
                 m_start_new = false;
             } else {
-                m_total = apply_op(m_total, m_num, m_operation);
+                if (m_first) {
+                    m_total = m_num;
+                    m_first = false;
+                } else {
+                    m_total = apply_op(m_total, m_num, m_operation);
+                }
             }
             m_num = 0;
         }
@@ -128,6 +134,7 @@ void calculator_handle(ui_event_t *e) {
             m_num = apply_op(m_total, m_num, m_operation);
             m_total = 0;
             m_start_new = true;
+            m_first = true;
         }
 
         int lines = 40;
