@@ -194,6 +194,12 @@ void calculator_handle(ui_event_t *e) {
             watchface_draw(g_scrolloff);
             plat_update(0, g_line, 240, g_nlines);
         }
+
+        for (int i = 0; i < 240; i++)
+            g_target[240*0 + i] = 31 | (63 << 5) | (31 << 11);
+        for (int i = 0; i < 240; i++)
+            g_target[240*1 + i] = 15 | (31 << 5) | (15 << 11);
+        plat_update(0, g_scrolloff + y, 240, 2);
         m_back_prev = y;
     }
 }
