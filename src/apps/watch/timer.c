@@ -12,6 +12,7 @@
 #include "task/time.h"
 #include "text.h"
 #include "ui.h"
+#include "back.h"
 #include "roundedrect.h"
 #include "util/except.h"
 #include "util/log.h"
@@ -185,6 +186,9 @@ static bool m_pressed = false;
 static bool m_inhibit_starting_scroll = false;
 
 void timer_handle(ui_event_t *e) {
+    bool isback = back_handle(e);
+    if (isback) return;
+
     int start, lines;
     bool is_viewscroll = false;
 

@@ -16,6 +16,7 @@
 #include "text.h"
 #include "thumbnail.h"
 #include "ui.h"
+#include "back.h"
 #include "timer.h"
 #include <util/divmod.h>
 #include "roundedrect.h"
@@ -63,6 +64,9 @@ void alarmdone_draw(int top) {
 }
 
 void alarmdone_handle(ui_event_t *e) {
+    bool isback = back_handle(e);
+    if (isback) return;
+
     int start = 0, lines = 0;
 
     if (e->type == UI_EVENT_REDRAW) {
