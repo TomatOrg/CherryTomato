@@ -28,6 +28,27 @@ void test_draw(int top) {
 
 }
 
+/*void draw(int x, int y, int r) {
+    int startx = MAX(x - 20, 10);
+    int endx = MIN(x + 20, 230);
+    g_pitch = endx - startx;
+    if (g_pitch <= 0) return;
+    int start = MAX(y - 20, g_scrolloff + 10);
+    int end = MIN(y + 20, g_scrolloff + 230);
+    int lines = end - start;
+    for (int l = 0; l < lines; l++) {
+        g_line = start + l;
+        g_nlines = 1;
+        memset(g_target, 0, 240 * 2);
+        int off = startx - (x-20);
+        if (g_line >= y - r && g_line < y + r) for (int i = 0; i < r*2-off; i++) { g_target[i] = 0xFFFF; }
+        plat_update(startx, g_line, g_pitch, g_nlines);
+    }
+}*/
+
+
+int current_half = 0;
+
 void draw(int x, int y, int r) {
     int startx = MAX(x - 20, 10);
     int endx = MIN(x + 20, 230);
@@ -36,28 +57,13 @@ void draw(int x, int y, int r) {
     int start = MAX(y - 20, g_scrolloff + 10);
     int end = MIN(y + 20, g_scrolloff + 230);
     int lines = end - start;
-    for (int l = 0; l < lines; l += NLINES) {
+    for (int l = 0; l < lines; l++) {
         g_line = start + l;
-        g_nlines = MIN(lines - l, NLINES);
-        memset(g_target, 0, 240 * 2 * NLINES);
-        if (x - 20 >= 0 && x + 20 < 240) roundedrect(20 - r, y - r, r*2, r*2, 0xFFFF);
-        for (int i = 0; i < g_nlines; i++) {
-            for (int j = 0; j < g_pitch; j++) {
-                int dx = (j + startx) - 120, dy = (i + g_line - g_scrolloff) - 120;
-                dx *= dx; dy *= dy;
-                float a = sqrtf(dx + dy) / 120;
-                if (a > 1.0) a = 1.0;
-                a = 1.0 - a;
-
-                int off = i * g_pitch + j;
-                uint16_t v = __builtin_bswap16(g_target[off]);
-                uint8_t r = (v & 31), g = ((v >> 5) & 63), b = ((v >> 11) & 31);
-                uint8_t newr = r * a;
-                uint8_t newg = g * a;
-                uint8_t newb = b * a;
-                g_target[off] = __builtin_bswap16((newr << 0) | (newg << 5) | (newb << 11));
-            }
-        }
+        if ((g_line & 1) != current_half) continue;
+        g_nlines = 1;
+        memset(g_target, 0, 240 * 2);
+        int off = startx - (x-20);
+        if (g_line >= y - r && g_line < y + r) for (int i = 0; i < r*2-off; i++) { g_target[i] = 0xFFFF; }
         plat_update(startx, g_line, g_pitch, g_nlines);
     }
 }
@@ -72,6 +78,7 @@ void test_handle(ui_event_t *e) {
         m_startx = e->touchevent.x;
         m_starty = e->touchevent.y;
     }
+
     for (int i = -100; i < 100; i++) {
         for (int j = -100; j < 100; j++) {
             int x = 40 * i + (e->touchevent.x - m_startx);
@@ -85,4 +92,5 @@ void test_handle(ui_event_t *e) {
             draw(x, g_top + y, r);
         }
     }
+    current_half = 1 - current_half;
 }

@@ -141,7 +141,7 @@ void target_entry(void) {
     // display spi
     spi_init(&g_spi2,
              ST7789_SCLK, ST7789_MOSI, INVALID_GPIO, ST7789_CS,
-             80 * 1000 * 1000, SPI_DATA_MODE0);
+             32 * 1000 * 1000, SPI_DATA_MODE0);
 
     //
     // Initialize hardware

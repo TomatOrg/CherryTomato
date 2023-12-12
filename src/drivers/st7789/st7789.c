@@ -133,7 +133,7 @@ static void st7789_init_power() {
     target_st7789_write_byte(0x20);
 
     st7789_write_command(ST7789_FRCTR2);
-    target_st7789_write_byte(0x0F);
+    target_st7789_write_byte(0x15);
 
     st7789_write_command(ST7789_PWCTRL1);
     target_st7789_write_byte(0xa4);
@@ -180,21 +180,6 @@ void st7789_init() {
     st7789_init_gamma();
 
     st7789_write_command(ST7789_INVON);
-
-    // wip probably broken code to make it 24fps
-    st7789_write_command(ST7789_PTLAR);
-    // "partial" area that takes the whole screen
-    target_st7789_write_byte(0 >> 8);
-    target_st7789_write_byte(0 & 0xFF);
-    target_st7789_write_byte(240 >> 8);
-    target_st7789_write_byte(240 & 0xFF);
-
-    st7789_write_command(ST7789_FRCTRL1);
-    target_st7789_write_byte(1<<4 | (0b01));
-    target_st7789_write_byte(0x17);
-    target_st7789_write_byte(0x17);
-
-    st7789_write_command(ST7789_PTLON);
 
     st7789_write_command(ST7789_CASET);
     target_st7789_write_byte(0x00);
