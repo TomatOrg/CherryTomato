@@ -90,7 +90,7 @@ static uint64_t apply_op(uint64_t lhs, uint64_t rhs, op_t op) {
 }
 
 void calculator_handle(ui_event_t *e) {
-    bool isback = back_handle(e);
+    bool isback = back_handle(e, calculator_draw);
     if (isback) return;
 
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP) {
@@ -138,7 +138,7 @@ void calculator_handle(ui_event_t *e) {
         }
 
         int lines = 40;
-        int start = g_top + 20;
+        int start = g_top + 22;
         g_pitch = 200-32;
         for (int l = 0; l < lines; l += NLINES) {
             g_line = start + l;
