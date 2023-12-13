@@ -125,10 +125,11 @@ void messagelist_handle(ui_event_t *e) {
         // and and display the rest without translation
         off = MAX(0, MIN(off, 200));
         g_pitch = 200;
-        for (int l = 0; l < 64; l += NLINES) {
+        int numlines = 64;
+        for (int l = 0; l < numlines; l += NLINES) {
             g_line = 20 + g_top + l + horiz_drag_idx * 80;
-            g_nlines = MIN(64 - l, NLINES);
-            memset(g_target, 0x00, 240 * 2 * NLINES);
+            g_nlines = MIN(numlines - l, NLINES);
+            memset(g_target, 0, 240 * 2 * NLINES);
             messagelist_draw_x(g_top + 0, 0);
             for (int i = 0; i < NLINES; i++) {
                 memmove(g_target + i * g_pitch + off, g_target + i * g_pitch, (g_pitch - off) * 2);
@@ -153,7 +154,7 @@ void messagelist_handle(ui_event_t *e) {
             // draw the rest
             // TODO: i can do a scrolloff trick here, but it's fast enough for now
             int start = 20 + horiz_drag_idx * 80;
-            int numlines = 240 - (20 + horiz_drag_idx * 80 - m_messagelist_inertial.scroll) + 1;
+            int numlines = 240 - (20 + horiz_drag_idx * 80 - m_messagelist_inertial.scroll);
             g_pitch = 200;
             for (int l = 0; l < numlines; l += NLINES) {
                 g_line = g_top + l + start;
