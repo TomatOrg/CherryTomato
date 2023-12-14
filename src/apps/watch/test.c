@@ -59,6 +59,7 @@ void draw(int x, int y, int r) {
     int start = MAX(y - 24, g_scrolloff + 10);
     int end = MIN(y + 24, g_scrolloff + 230);
     int lines = end - start;
+    int recip = r != 0 ? (256 * 36 / (r * 2)) : 0;
     for (int l = 0; l < lines; l++) {
         g_line = start + l;
         if ((g_line & 1) != current_field) continue;
@@ -67,8 +68,8 @@ void draw(int x, int y, int r) {
         int off = startx - (x-24);
         if (g_line >= y - r && g_line < y + r)
             for (int i = off; i < r*2; i++) {
-                int ix = i * 36 / (r*2);
-                int iy = (g_line - (y - r)) * 36 / (r*2);
+                int ix = (i * recip) >> 8;
+                int iy = ((g_line - (y - r)) * recip) >> 8;
                 uint16_t col = ((uint16_t*)_music)[iy * 36 + ix];
                 g_target[i-off] = __builtin_bswap16(col);
             }
@@ -77,14 +78,20 @@ void draw(int x, int y, int r) {
 }
 
 
+static int m_startx = 0;
+static int m_starty = 0;
+
 void test_handle(ui_event_t *e) {
     bool isback = back_handle(e);
     if (isback) return;
 
+    if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_DOWN) {
+        m_startx = e->touchevent.x;
+        m_starty = e->touchevent.y;
+    }
 
-    int xoff = e->touchevent.x - 120;
-    int yoff = e->touchevent.y - 120;
-
+    int xoff = e->touchevent.x - m_startx;
+    int yoff = e->touchevent.y - m_starty;
     for (int i = -yoff / 48 - 1; i < (-yoff + 240) / 48 + 1; i++) {
         for (int j = -xoff / 48 - 1; j < (-xoff + 240) / 48 + 1; j++) {
             int y = 48 * i + yoff;
