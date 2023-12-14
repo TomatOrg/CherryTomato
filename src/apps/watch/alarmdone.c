@@ -24,7 +24,6 @@
 #include <util/except.h>
 
 static ui_timer_t m_timer;
-static bool m_closing_animation = false;
 
 void alarmdone_draw(int top) {
     char string[16];
@@ -65,6 +64,9 @@ void alarmdone_handle(ui_event_t *e) {
     bool isback = back_handle(e, alarmdone_draw);
     if (isback) return;
 
+    bool transition = transition_do();
+    if (transition) return;
+
     int start = 0, lines = 0;
 
     if (e->type == UI_EVENT_REDRAW) {
@@ -74,19 +76,18 @@ void alarmdone_handle(ui_event_t *e) {
         m_timer = timers[0];
     }
 
-    if (!m_closing_animation) {
-        DO_DRAW(0, start, 240, lines, {
-            timer_draw(g_top + -240);
-            alarmdone_draw(g_top + 0);
-            messagelist_draw(g_top + 240);
-        });
-    }
-    if (!m_closing_animation && e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP) {
+
+    DO_DRAW(0, start, 240, lines, {
+        timer_draw(g_top + -240);
+        alarmdone_draw(g_top + 0);
+        messagelist_draw(g_top + 240);
+    });
+
+    if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP) {
         int button_num = -1;
         int tx = e->touchevent.x, ty = e->touchevent.y;
         if (tx >= 20 && tx < 20 + 90 && ty >= 160 && ty < 160 + 60) button_num = 0;
         else if (tx >= 130 && tx < 130 + 90 && ty >= 160 && ty < 160 + 60) button_num = 1;
-        if (button_num != -1) m_closing_animation = true;
 
         bool alarm_snooze = m_timer.type == 0 && button_num == 1;
         bool timer_repeat = m_timer.type == 1 && button_num == 0;
@@ -113,9 +114,6 @@ void alarmdone_handle(ui_event_t *e) {
             timer_add(&m_timer);
         }
 
-        if (button_num != -1) closinganimation_start(watchface_draw, watchface_handle);
+        if (button_num != -1) transition_start(watchface_draw, watchface_handle);
     }
-
-    closinganimation_close();
-
 }

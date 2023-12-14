@@ -176,6 +176,8 @@ static bool m_inhibit_starting_scroll = false;
 void timer_handle(ui_event_t *e) {
     bool isback = back_handle(e, timer_draw);
     if (isback) return;
+    bool transition = transition_do();
+    if (transition) return;
 
     int start, lines;
     bool is_viewscroll = false;
@@ -234,7 +236,7 @@ void timer_handle(ui_event_t *e) {
             int h, m;
             get_values(&h, &m);
             if (m_pressed && m_is_buttonpress && !(h == 0 && m == 0)) {
-                closinganimation_start(watchface_draw, watchface_handle);
+                transition_start(watchface_draw, watchface_handle);
                 // add the timer
                 ui_timer_t t = { .type = m_type };
                 get_values(&t.display_hour, &t.display_minute);
@@ -275,8 +277,6 @@ void timer_handle(ui_event_t *e) {
             draw_scrollbar(m_curr_selected != 0, 0, m_timers_scrolloff[m_curr_selected], g_top));
         draw_hinttext();
     }
-
-    closinganimation_close();
 
     if (is_viewscroll) {
         DO_DRAW(0, start, 240, lines, {

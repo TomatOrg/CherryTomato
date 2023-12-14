@@ -45,7 +45,7 @@ bool back_handle(ui_event_t *e, drawer_t* draw) {
 
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_CONTACT) {
         if (e->touchevent.y - m_starty > 4) {
-            m_rubberband = m_starty <= 20;
+            m_rubberband = m_starty <= 30;
             if (m_rubberband) {
                 g_pitch = 240;
                 int y = rubberband(e->touchevent.y, 0.35, 240);
@@ -65,7 +65,7 @@ bool back_handle(ui_event_t *e, drawer_t* draw) {
 
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP) {
         if (m_rubberband) {
-            if (rubberband(e->touchevent.y, 0.35, 240) < 40) {
+            if (rubberband(e->touchevent.y, 0.35, 240) < 20) {
                 m_return = true;
                 m_return_start = get_system_time() / 1000;
             } else {

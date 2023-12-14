@@ -1,6 +1,6 @@
 #pragma once
 #include "event.h"
-
+#include <stdbool.h>
 
 #define DO_DRAW(startx, starty, width, height, draw) \
     g_pitch = width; \
@@ -35,5 +35,5 @@ void fullmessage_handle(ui_event_t *e);
 void applist_handle(ui_event_t *e);
 void calculator_handle(ui_event_t *e);
 
-void closinganimation_start(drawer_t* d, handler_t* h);
-void closinganimation_close();
+void transition_start(drawer_t* d, handler_t* h);
+bool transition_do();

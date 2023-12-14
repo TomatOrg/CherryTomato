@@ -51,6 +51,9 @@ void applist_draw(int top) {
 static bool m_state[3] = {};
 
 void applist_handle(ui_event_t *e) {
+    bool transition = transition_do();
+    if (transition) return;
+
     int start, lines;
 
     if (e->type == UI_EVENT_REDRAW) {
@@ -93,11 +96,11 @@ void applist_handle(ui_event_t *e) {
         int bx = (e->touchevent.x - 12) / 75;
         int by = (e->touchevent.y - 20) / 75;
         if ((bx==0 && by==0) || (bx==1 && by==0)) {
-            closinganimation_start(timer_draw, timer_handle);
+            transition_start(timer_draw, timer_handle);
         }
 
         if (bx==2 && by==0){
-            closinganimation_start(calculator_draw, calculator_handle);
+            transition_start(calculator_draw, calculator_handle);
         }
 
         if (by==1) {
@@ -109,6 +112,4 @@ void applist_handle(ui_event_t *e) {
             });
         }
     }
-
-    closinganimation_close();
 }
