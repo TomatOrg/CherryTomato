@@ -39,7 +39,6 @@ static float rubberband(float x, float coeff, float dim) {
 bool back_handle(ui_event_t *e, drawer_t* draw) {
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_DOWN) {
         m_starty = e->touchevent.y;
-        m_rubberband = e->touchevent.y <= 30;
         m_rubberband_prev_start = 0;
         m_rubberband_max = 0;
     }
@@ -77,6 +76,7 @@ bool back_handle(ui_event_t *e, drawer_t* draw) {
                 m_back = true;
                 m_back_start = get_system_time() / 1000;
             }
+            m_rubberband = false;
         }
     }
 
