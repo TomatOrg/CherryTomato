@@ -44,7 +44,7 @@ void start_event_loop(loop_fn_t* fn, void* arg) {
         fn(arg);
         uint64_t after = get_system_time();
         uint64_t delta = after - starttime;
-        if (delta < 20 * 1000) { udelay(20 * 1000 - delta); }
+        if (delta < 16 * 1000) { udelay(16 * 1000 - delta); }
     }
 #endif
 }

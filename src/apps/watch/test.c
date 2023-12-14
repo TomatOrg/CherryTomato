@@ -47,50 +47,49 @@ void test_draw(int top) {
 }*/
 
 
-int current_half = 0;
+int current_field = 0;
+
+#include "../icons.h"
 
 void draw(int x, int y, int r) {
-    int startx = MAX(x - 20, 10);
-    int endx = MIN(x + 20, 230);
+    int startx = MAX(x - 24, 10);
+    int endx = MIN(x + 24, 230);
     g_pitch = endx - startx;
     if (g_pitch <= 0) return;
-    int start = MAX(y - 20, g_scrolloff + 10);
-    int end = MIN(y + 20, g_scrolloff + 230);
+    int start = MAX(y - 24, g_scrolloff + 10);
+    int end = MIN(y + 24, g_scrolloff + 230);
     int lines = end - start;
     for (int l = 0; l < lines; l++) {
         g_line = start + l;
-        if ((g_line & 1) != current_half) continue;
+        if ((g_line & 1) != current_field) continue;
         g_nlines = 1;
         memset(g_target, 0, 240 * 2);
-        int off = startx - (x-20);
-        if (g_line >= y - r && g_line < y + r) for (int i = 0; i < r*2-off; i++) { g_target[i] = 0xFFFF; }
+        int off = startx - (x-24);
+        if (g_line >= y - r && g_line < y + r)
+            for (int i = off; i < r*2; i++) {
+                int ix = i * 36 / (r*2);
+                int iy = (g_line - (y - r)) * 36 / (r*2);
+                uint16_t col = ((uint16_t*)_music)[iy * 36 + ix];
+                g_target[i-off] = __builtin_bswap16(col);
+            }
         plat_update(startx, g_line, g_pitch, g_nlines);
     }
 }
 
-static int m_startx = 0;
-static int m_starty = 0;
 
 void test_handle(ui_event_t *e) {
     bool isback = back_handle(e);
     if (isback) return;
-    if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_DOWN) {
-        m_startx = e->touchevent.x;
-        m_starty = e->touchevent.y;
-    }
 
-    for (int i = -100; i < 100; i++) {
-        for (int j = -100; j < 100; j++) {
-            int x = 40 * i + (e->touchevent.x - m_startx);
-            int y = 40 * j + (e->touchevent.y - m_starty);
-            if (j % 2) { x += 40 / 2; }
-            float toCenter = sqrtf(
-                pow(y - 120, 2) +
-                pow(x - 120, 2)
-            );
-            float r = MIN(15, (240 * (0.20 - toCenter / 240 / 3)) / 2);
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            int x = 48 * i + (e->touchevent.x - 120);
+            int y = 48 * j + (e->touchevent.y - 120);
+            if (j % 2) { x += 48 / 2; }
+            float toCenter = sqrtf((y-120)*(y-120) + (x-120)*(x-120));
+            float r = MIN(18, (240 * (0.30 - toCenter / 240 / 2)) / 2);
             draw(x, g_top + y, r);
         }
     }
-    current_half = 1 - current_half;
+    current_field = 1 - current_field;
 }
