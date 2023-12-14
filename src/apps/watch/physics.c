@@ -26,7 +26,6 @@ int handle_inertial(inertial_state_t *d, ui_event_t *e) {
 
     if (d->type == SCROLL_CONTACT && e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP) {
         if (d->round || fabsf(d->velocity) > 1) {
-            g_frame_requested = true;
             d->type = SCROLL_INERTIAL;
             d->startscroll = d->scroll;
             d->starttime = (get_system_time() / 1000);

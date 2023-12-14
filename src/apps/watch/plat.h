@@ -6,7 +6,6 @@
 
 extern uint16_t *g_target;
 extern int g_scrolloff;
-extern bool g_frame_requested;
 extern int g_line;
 extern int g_nlines;
 extern int g_pitch;

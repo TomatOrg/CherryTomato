@@ -42,6 +42,7 @@ SRCS			+= src/util/libm/ef_sqrt.c
 SRCS			+= src/apps/watch/timer.c
 SRCS			+= src/apps/watch/calculator.c
 SRCS			+= src/apps/watch/roundedrect.c
+SRCS			+= src/apps/watch/closinganimation.c
 SRCS			+= src/apps/watch/alarmdone.c
 SRCS			+= src/apps/watch/applist.c
 SRCS			+= src/apps/watch/main.c

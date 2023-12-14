@@ -64,15 +64,11 @@ void messagelist_handle(ui_event_t *e) {
     if (is_vertical_movement) {
         handle_inertial(&m_messagelist_inertial, e);
         ui_update_scrolloff(g_top + m_messagelist_inertial.scroll, &start, &lines);
-        g_pitch = 240;
-        for (int l = 0; l < lines; l += NLINES) {
-            g_line = start + l;
-            g_nlines = MIN(lines - l, NLINES);
-            memset(g_target, 0, 240 * 2 * NLINES);
+
+        DO_DRAW(0, start, 240, lines, {
             watchface_draw(g_top + -240);
             messagelist_draw(g_top + 0);
-            plat_update(0, g_line, 240, g_nlines);
-        }
+        });
 
         if (m_messagelist_inertial.type == SCROLL_NONE && m_messagelist_inertial.scroll == -240) {
             g_handler = watchface_handle;
@@ -124,19 +120,14 @@ void messagelist_handle(ui_event_t *e) {
         // I don't have to memmove it around, i can just clear currx-oldx cols
         // and and display the rest without translation
         off = MAX(0, MIN(off, 200));
-        g_pitch = 200;
-        int numlines = 64;
-        for (int l = 0; l < numlines; l += NLINES) {
-            g_line = 20 + g_top + l + horiz_drag_idx * 80;
-            g_nlines = MIN(numlines - l, NLINES);
-            memset(g_target, 0, 240 * 2 * NLINES);
+
+        DO_DRAW(20, 20 + g_top + horiz_drag_idx * 80, 200, 64, {
             messagelist_draw_x(g_top + 0, 0);
             for (int i = 0; i < NLINES; i++) {
                 memmove(g_target + i * g_pitch + off, g_target + i * g_pitch, (g_pitch - off) * 2);
                 memset(g_target + i * g_pitch, 0, off * 2);
             }
-            plat_update(20, g_line, 200, g_nlines);
-        }
+        });
 
         // should we delete the message?
         bool should_delete_msg = false;
@@ -155,14 +146,7 @@ void messagelist_handle(ui_event_t *e) {
             // TODO: i can do a scrolloff trick here, but it's fast enough for now
             int start = 20 + horiz_drag_idx * 80;
             int numlines = 240 - (20 + horiz_drag_idx * 80 - m_messagelist_inertial.scroll);
-            g_pitch = 200;
-            for (int l = 0; l < numlines; l += NLINES) {
-                g_line = g_top + l + start;
-                g_nlines = MIN(numlines - l, NLINES);
-                memset(g_target, 0x00, 240 * 2 * NLINES);
-                messagelist_draw_x(g_top + 0, 0);
-                plat_update(20, g_line, 200, g_nlines);
-            }
+            DO_DRAW(20, g_top + start, 200, numlines, messagelist_draw_x(g_top, 0));
         }
     }
 
@@ -175,31 +159,15 @@ void messagelist_handle(ui_event_t *e) {
         float half = 120 - spring_ex(120, 0, t, 10, 1);
         if (half >= 119) {
             half = 120;
-            g_frame_requested = false;
             m_messagelist_anim = false;
             g_top = g_scrolloff;
             g_startscroll_above = m_messagelist_inertial.startscroll;
             g_handler = fullmessage_handle;
-        } else g_frame_requested = true;
-
+        }
         int y = (int)half;
-        int lines = y - m_messagelist_anim_oldy;
-        g_pitch = 240;
-        for (int l = 0; l < lines; l += NLINES) {
-            g_line = g_scrolloff + 120 - y + l;
-            g_nlines = MIN(lines - l, NLINES);
-            memset(g_target, 0, 240 * 2 * NLINES);
-            fullmessage_draw(g_scrolloff);
-            plat_update(0, g_line, 240, g_nlines);
-        }
-        g_pitch = 240;
-        for (int l = 0; l < lines; l += NLINES) {
-            g_line = g_scrolloff + 120 + m_messagelist_anim_oldy + l;
-            g_nlines = MIN(lines - l, NLINES);
-            memset(g_target, 0, 240 * 2 * NLINES);
-            fullmessage_draw(g_scrolloff);
-            plat_update(0, g_line, 240, g_nlines);
-        }
+        int height = y - m_messagelist_anim_oldy;
+        DO_DRAW(0, g_scrolloff + 120 - y, 240, height, fullmessage_draw(g_scrolloff));
+        DO_DRAW(0, g_scrolloff + 120 + m_messagelist_anim_oldy, 240, height, fullmessage_draw(g_scrolloff));
         m_messagelist_anim_oldy = y;
     }
 }

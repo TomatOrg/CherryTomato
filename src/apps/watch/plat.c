@@ -23,7 +23,6 @@ void ui_init();
 
 uint16_t *g_target;
 int g_scrolloff = 0;
-bool g_frame_requested = false;
 int g_line = 0;
 int g_nlines = 0;
 int g_pitch = 0;

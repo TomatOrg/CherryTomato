@@ -1,6 +1,17 @@
 #pragma once
 #include "event.h"
 
+
+#define DO_DRAW(startx, starty, width, height, draw) \
+    g_pitch = width; \
+    for (int l = 0; l < height; l += NLINES) { \
+        g_line = starty + l; \
+        g_nlines = MIN(height - l, NLINES); \
+        memset(g_target, 0, 240 * 2 * NLINES); \
+        draw; \
+        plat_update(startx, g_line, g_pitch, g_nlines); \
+    }
+
 typedef void handler_t(ui_event_t *e);
 typedef void drawer_t(int top);
 
@@ -23,3 +34,6 @@ void timer_handle(ui_event_t *e);
 void fullmessage_handle(ui_event_t *e);
 void applist_handle(ui_event_t *e);
 void calculator_handle(ui_event_t *e);
+
+void closinganimation_start(drawer_t* d, handler_t* h);
+void closinganimation_close();

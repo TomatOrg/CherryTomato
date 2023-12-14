@@ -31,17 +31,11 @@ void fullmessage_handle(ui_event_t *e) {
     int start, lines;
     handle_inertial(&m_fullmessage_inertial, e);
     ui_update_scrolloff(g_top + m_fullmessage_inertial.scroll, &start, &lines);
-    g_pitch = 240;
-    for (int l = 0; l < lines; l += NLINES) {
-        g_line = start + l;
-        g_nlines = MIN(lines - l, NLINES);
-        memset(g_target, 0, 240 * 2 * NLINES);
+    DO_DRAW(0, start, 240, lines, {
         fullmessage_draw(g_top + 0);
-
         // limit this so it doesn't draw over the fullmessage view
         if (start + l < g_top) { messagelist_draw(g_top - 240 - g_startscroll_above); }
-        plat_update(0, g_line, 240, g_nlines);
-    }
+    });
 
     if (m_fullmessage_inertial.type == SCROLL_NONE && m_fullmessage_inertial.scroll == -240) {
         g_handler = messagelist_handle;

@@ -56,16 +56,11 @@ void watchface_handle(ui_event_t *e) {
         lines = 240;
     }
 
-    g_pitch = 240;
-    for (int l = 0; l < lines; l += NLINES) {
-        g_line = start + l;
-        g_nlines = MIN(lines - l, NLINES);
-        memset(g_target, 0, 240 * 2 * NLINES);
+    DO_DRAW(0, start, 240, lines, {
         applist_draw(g_top + -240);
         watchface_draw(g_top + 0);
         messagelist_draw(g_top + 240);
-        plat_update(0, g_line, 240, g_nlines);
-    }
+    });
 
     if (m_watchface_inertial.type == SCROLL_NONE && m_watchface_inertial.scroll == -240) {
         g_handler = applist_handle;

@@ -45,22 +45,18 @@ bool back_handle(ui_event_t *e, drawer_t* draw) {
 
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_CONTACT) {
         if (e->touchevent.y - m_starty > 4) {
-            m_rubberband = m_starty <= 30;
+            m_rubberband = m_starty <= 20;
             if (m_rubberband) {
                 g_pitch = 240;
                 int y = rubberband(e->touchevent.y, 0.35, 240);
                 int start = MIN(m_rubberband_prev_start, y);
                 int end = MAX(m_rubberband_prev_start + 40, y + 40);
-                int lines = end - start;
-                for (int l = 0; l < lines; l += NLINES) {
-                    g_line = g_scrolloff + l + start - 20;
-                    g_nlines = MIN(lines - l, NLINES);
-                    for (int i = 0; i < g_nlines * 240; i++) g_target[i] = 0;
+                DO_DRAW(0, g_scrolloff + start - 20, 240, end-start, {
                     draw(g_scrolloff);
                     roundedrect(100, g_scrolloff + y - 20, 40, 40, 10 | (20 << 5) | (10 << 11));
                     text_drawicon(icon_arrow_down, 100, g_scrolloff + y - 19);
-                    plat_update(0, g_line, 240, g_nlines);
-                }
+                })
+
                 m_rubberband_prev_start = y;
                 m_rubberband_max = MAX(m_rubberband_max, end);
             }
@@ -89,15 +85,7 @@ bool back_handle(ui_event_t *e, drawer_t* draw) {
             y = 0;
             m_return = false;
         }
-        int lines = m_return_prev - y;
-        g_pitch = 240;
-        for (int l = 0; l < lines; l += NLINES) {
-            g_line = g_scrolloff + y + l;
-            g_nlines = MIN(lines - l, NLINES);
-            memset(g_target, 0, 240 * 2 * NLINES);
-            draw(g_scrolloff);
-            plat_update(0, g_line, 240, g_nlines);
-        }
+        DO_DRAW(0, g_scrolloff + y, 240, m_return_prev - y, draw(g_scrolloff));
         m_return_prev = y;
     }
 
@@ -112,15 +100,7 @@ bool back_handle(ui_event_t *e, drawer_t* draw) {
             g_top = g_scrolloff;
             g_handler = watchface_handle;
         }
-        int lines = y - m_back_prev;
-        g_pitch = 240;
-        for (int l = 0; l < lines; l += NLINES) {
-            g_line = g_scrolloff + m_back_prev + l;
-            g_nlines = MIN(lines - l, NLINES);
-            memset(g_target, 0, 240 * 2 * NLINES);
-            watchface_draw(g_scrolloff);
-            plat_update(0, g_line, 240, g_nlines);
-        }
+        DO_DRAW(0, g_scrolloff + m_back_prev, 240, y - m_back_prev, watchface_draw(g_scrolloff));
 
         for (int i = 0; i < 240; i++)
             g_target[240*0 + i] = __builtin_bswap16(31 | (63 << 5) | (31 << 11));

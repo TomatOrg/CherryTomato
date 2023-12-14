@@ -137,15 +137,6 @@ void calculator_handle(ui_event_t *e) {
             m_first = true;
         }
 
-        int lines = 40;
-        int start = g_top + 22;
-        g_pitch = 200-32;
-        for (int l = 0; l < lines; l += NLINES) {
-            g_line = start + l;
-            g_nlines = MIN(lines - l, NLINES);
-            memset(g_target, 0, 240 * 2 * NLINES);
-            draw_text(32, g_top + 0);
-            plat_update(32, g_line, 200-32, g_nlines);
-        }
+        DO_DRAW(32, g_top+22, 200-32, 40, draw_text(32, g_top));
     }
 }
