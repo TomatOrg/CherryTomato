@@ -81,11 +81,15 @@ void test_handle(ui_event_t *e) {
     bool isback = back_handle(e);
     if (isback) return;
 
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 10; j++) {
-            int x = 48 * i + (e->touchevent.x - 120);
-            int y = 48 * j + (e->touchevent.y - 120);
-            if (j % 2) { x += 48 / 2; }
+
+    int xoff = e->touchevent.x - 120;
+    int yoff = e->touchevent.y - 120;
+
+    for (int i = -yoff / 48 - 1; i < (-yoff + 240) / 48 + 1; i++) {
+        for (int j = -xoff / 48 - 1; j < (-xoff + 240) / 48 + 1; j++) {
+            int y = 48 * i + yoff;
+            int x = 48 * j + xoff;
+            if (i % 2) { x += 48 / 2; }
             float toCenter = sqrtf((y-120)*(y-120) + (x-120)*(x-120));
             float r = MIN(18, (240 * (0.30 - toCenter / 240 / 2)) / 2);
             draw(x, g_top + y, r);
