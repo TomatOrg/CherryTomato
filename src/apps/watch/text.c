@@ -1,5 +1,7 @@
 #include "text.h"
 #include "plat.h"
+#include "util/log.h"
+#include <stdint.h>
 #include <util/divmod.h>
 #include <string.h>
 #include <stdio.h>
@@ -81,20 +83,21 @@ void text_drawicon(uint8_t* data, int x, int y) {
     }
 }
 
-int text_drawchar(font_info_t *chinfo, int chidx, int x, int basey) {
+int text_drawchar_internal(font_info_t *chinfo, int chidx, int x, int basey, bool descenders_only) {
     font_charinfo_t *ch = (void *)(chinfo->storage + chidx * sizeof(font_charinfo_t));
     uint8_t *atlas = (void *)(chinfo->storage + chinfo->count * sizeof(font_charinfo_t));
     uint8_t *lines = atlas + ch->startidx;
 
     int height = ch->height;
     int width = ch->width;
-    int y = basey - ch->top;
+    int y = descenders_only ? basey : (basey - ch->top);
     x += ch->left;
 
     if (ch->width == 0) return ch->advance;
 
     int start = MAX(g_line, y);
-    int end = MIN(g_line + g_nlines, y + height);
+    int bound = descenders_only ? (y + height - ch->top) : (y + height);
+    int end = MIN(g_line + g_nlines, bound);
 
     int rleoff = height;
     for (int i = 0; i < MIN(height, start - basey + ch->top); i++) rleoff += lines[i];
@@ -130,12 +133,17 @@ int text_drawchar(font_info_t *chinfo, int chidx, int x, int basey) {
                 uint8_t newr = r + (31 - r) * intensity / 16;
                 uint8_t newg = g + (63 - g) * intensity / 16;
                 uint8_t newb = b + (31 - b) * intensity / 16;
+                // ASSERT(g_target[g_pitch * (l - g_line) + x + i] == 0);
                 g_target[g_pitch * (l - g_line) + x + i++] = __builtin_bswap16((newr << 0) | (newg << 5) | (newb << 11));
             }
         }
         rleoff += lines[l - basey + ch->top];
     }
     return ch->advance;
+}
+
+int text_drawchar(font_info_t *chinfo, int chidx, int x, int basey) {
+    return text_drawchar_internal(chinfo, chidx, x, basey, false);
 }
 
 int text_getlinesize(font_info_t *chinfo, const char *str) {
@@ -151,11 +159,11 @@ void text_drawline(font_info_t *chinfo, const char *str, int x, int basey) {
 }
 
 static void text_draw_wrapped_internal(font_info_t *chinfo, const char *str, int textstart, int textpos,
-                                                  int *xpos, int basey) {
+                                                  int *xpos, int basey, bool descenders_only) {
     for (int i = textstart; i < textpos; i++) {
         if (str[i] != '\n' && str[i] != 0) { // TODO: this is a bit of a hack
             int idx = getidx(chinfo, str[i]);
-            *xpos += text_drawchar(chinfo, idx, *xpos, basey);
+            *xpos += text_drawchar_internal(chinfo, idx, *xpos, basey, descenders_only);
         }
     }
 }
@@ -217,7 +225,6 @@ int text_draw_wrapped(font_info_t *chinfo, text_wrapped_t *msg, const char *str,
     int textline = floordiv(g_line - (basey - 22), 22);
     if (textline < -1) return 0; // TODO: shouldnt happen, ASSERT if it does
     if (textline > textlines + 1) return 0;
-
     while (true) {
         int end;
         if (basey + (textline - 1) * 22 > g_line + g_nlines) break;
@@ -225,16 +232,15 @@ int text_draw_wrapped(font_info_t *chinfo, text_wrapped_t *msg, const char *str,
         else end = msg->starts[textline + 1];
         if (textline < textlines)
             text_draw_wrapped_internal(chinfo, str, msg->starts[textline], end, &xpos,
-                                                  basey + textline * 22);
-        if (textline > 0) {
+                                                  basey + textline * 22, false);
+        if (textline > 0 && textline <= textlines) {
             xpos = x;
             int prevline = textline - 1;
-            // still eats up descenders sometimes, need to check char by char
-            if (basey + prevline * 22 < g_line) {
-                if ((prevline + 1) == textlines) end = msg->length;
-                else end = msg->starts[prevline + 1];
-                text_draw_wrapped_internal(chinfo, str, msg->starts[prevline], end, &xpos,
-                                                      basey + prevline * 22);
+            if ((prevline + 1) == textlines) end = msg->length;
+            else end = msg->starts[prevline + 1];
+            if (basey + prevline * 22 <= g_line) {
+                    text_draw_wrapped_internal(chinfo, str, msg->starts[prevline], end, &xpos,
+                        basey + prevline * 22, true);
             }
         }
         xpos = x;

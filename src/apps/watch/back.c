@@ -47,7 +47,6 @@ bool back_handle(ui_event_t *e, drawer_t* draw) {
         if (e->touchevent.y - m_starty > 4) {
             m_rubberband = m_starty <= 30;
             if (m_rubberband) {
-                g_pitch = 240;
                 int y = rubberband(e->touchevent.y, 0.35, 240);
                 int start = MIN(m_rubberband_prev_start, y);
                 int end = MAX(m_rubberband_prev_start + 40, y + 40);
@@ -56,7 +55,6 @@ bool back_handle(ui_event_t *e, drawer_t* draw) {
                     roundedrect(100, g_scrolloff + y - 20, 40, 40, 10 | (20 << 5) | (10 << 11));
                     text_drawicon(icon_arrow_down, 100, g_scrolloff + y - 19);
                 })
-
                 m_rubberband_prev_start = y;
                 m_rubberband_max = MAX(m_rubberband_max, end);
             }

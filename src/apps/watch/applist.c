@@ -67,7 +67,7 @@ void applist_handle(ui_event_t *e) {
 
     bool starting_vertical = (recognized && vertical);
     bool in_scroll = m_applist_inertial.type != SCROLL_NONE;
-    bool is_vertical_movement = /*!m_closing_animation &&*/ (starting_vertical || in_scroll);
+    bool is_vertical_movement = (starting_vertical || in_scroll);
 
     if (is_vertical_movement) {
         handle_inertial(&m_applist_inertial, e);
