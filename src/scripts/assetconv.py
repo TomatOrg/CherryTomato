@@ -27,7 +27,7 @@ def comp(buffer, height, width, pitch):
     for y in range(height):
         vals = b''
         for x in range(width):
-            val = pow(buffer[x + y * pitch] / 255.0, 1 / 2.2)
+            val = pow(buffer[x + y * pitch] / 255.0, 1 / 1.8)
             vals += bytes([int(val * 15)])
 
         bitstream = ''
@@ -65,7 +65,15 @@ def conv(outpath, size, outname, usedchars):
 
     filename = outpath
 
+
     error = FT_Init_FreeType(byref(library))
+    FT_Property_Set(library, "cff",
+                            "hinting-engine",
+                            0 )
+    FT_Property_Set(library, "truetype",
+                            "interpreter-version",
+                            35 )
+
     error = FT_New_Face(library, to_c_str(filename), 0, byref(face))
 
     charinfos = b''

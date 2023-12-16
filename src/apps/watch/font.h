@@ -6,7 +6,7 @@ typedef struct font_charinfo {
     uint32_t startidx;
     uint8_t width;
     uint8_t height;
-    uint8_t left;
+    int8_t left;
     uint8_t top;
     uint8_t advance;
     uint16_t codepoint;

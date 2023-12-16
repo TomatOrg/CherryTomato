@@ -130,10 +130,9 @@ int text_drawchar_internal(font_info_t *chinfo, int chidx, int x, int basey, boo
             for (int j = 0; j < count; j++) {
                 uint16_t v = __builtin_bswap16(g_target[g_pitch * (l - g_line) + x + i]);
                 uint8_t r = (v & 31), g = ((v >> 5) & 63), b = ((v >> 11) & 31);
-                uint8_t newr = r + (31 - r) * intensity / 16;
-                uint8_t newg = g + (63 - g) * intensity / 16;
-                uint8_t newb = b + (31 - b) * intensity / 16;
-                // ASSERT(g_target[g_pitch * (l - g_line) + x + i] == 0);
+                uint8_t newr = r + (31 - r) * intensity / 15;
+                uint8_t newg = g + (63 - g) * intensity / 15;
+                uint8_t newb = b + (31 - b) * intensity / 15;
                 g_target[g_pitch * (l - g_line) + x + i++] = __builtin_bswap16((newr << 0) | (newg << 5) | (newb << 11));
             }
         }
