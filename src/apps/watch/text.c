@@ -45,42 +45,36 @@ void text_drawicon(uint8_t* data, int x, int y) {
     int rleoff = height;
     for (int i = 0; i < MIN(height, start - y); i++) rleoff += lines[i];
 
-    for (int l = start; l < end; l++) {
+        for (int l = start; l < end; l++) {
         int entries_read = 2 * (4 - rleoff % 4);
         uint32_t *data = (uint32_t*)(lines + rleoff - rleoff % 4);
         uint32_t bitbuffer = *data++;
         bitbuffer >>= (rleoff % 4) * 8;
-
-        for (int i = 0; i < width;) {
-            uint8_t intensity;
-            {
-                intensity = bitbuffer & 0xF;
-                bitbuffer >>= 4;
-                if (--entries_read == 0) {
-                    entries_read = 8;
-                    bitbuffer = *data++;
-                }
-            }
+        int toread = lines[l - y] * 2;
+        for (int i = 0; i < width && toread;) {
+            uint8_t intensity = bitbuffer & 0xF;
+            bitbuffer >>= 4; toread--;
+            if (--entries_read == 0) { entries_read = 8; bitbuffer = *data++; }
             uint8_t count = 1;
-            if (intensity == 0 || intensity == 15) {
+            if (intensity == 14 || intensity == 15) {
                 count = bitbuffer & 0xF;
-                bitbuffer >>= 4;
-                if (--entries_read == 0) {
-                    entries_read = 8;
-                    bitbuffer = *data++;
-                }
+                bitbuffer >>= 4; toread--;
+                if (--entries_read == 0) { entries_read = 8; bitbuffer = *data++; }
+                if (intensity == 14) intensity = 0;
+                else if (intensity == 15) intensity = 13;
             }
             for (int j = 0; j < count; j++) {
                 uint16_t v = __builtin_bswap16(g_target[g_pitch * (l - g_line) + x + i]);
                 uint8_t r = (v & 31), g = ((v >> 5) & 63), b = ((v >> 11) & 31);
-                uint8_t newr = r + (31 - r) * intensity / 16;
-                uint8_t newg = g + (63 - g) * intensity / 16;
-                uint8_t newb = b + (31 - b) * intensity / 16;
+                uint8_t newr = r + (31 - r) * intensity / 13;
+                uint8_t newg = g + (63 - g) * intensity / 13;
+                uint8_t newb = b + (31 - b) * intensity / 13;
                 g_target[g_pitch * (l - g_line) + x + i++] = __builtin_bswap16((newr << 0) | (newg << 5) | (newb << 11));
             }
         }
         rleoff += lines[l - y];
     }
+
 }
 
 int text_drawchar_internal(font_info_t *chinfo, int chidx, int x, int basey, bool descenders_only) {
@@ -107,32 +101,27 @@ int text_drawchar_internal(font_info_t *chinfo, int chidx, int x, int basey, boo
         uint32_t *data = (uint32_t*)(lines + rleoff - rleoff % 4);
         uint32_t bitbuffer = *data++;
         bitbuffer >>= (rleoff % 4) * 8;
+        int toread = lines[l - basey + ch->top] * 2;
 
-        for (int i = 0; i < width;) {
-            uint8_t intensity;
-            {
-                intensity = bitbuffer & 0xF;
-                bitbuffer >>= 4;
-                if (--entries_read == 0) {
-                    entries_read = 8;
-                    bitbuffer = *data++;
-                }
-            }
+        for (int i = 0; i < width && toread;) {
+            uint8_t intensity = bitbuffer & 0xF;
+            bitbuffer >>= 4; toread--;
+            if (--entries_read == 0) { entries_read = 8; bitbuffer = *data++; }
             uint8_t count = 1;
-            if (intensity == 0 || intensity == 15) {
+            if (intensity == 14 || intensity == 15) {
                 count = bitbuffer & 0xF;
                 bitbuffer >>= 4;
-                if (--entries_read == 0) {
-                    entries_read = 8;
-                    bitbuffer = *data++;
-                }
+                toread--;
+                if (--entries_read == 0) { entries_read = 8; bitbuffer = *data++; }
+                if (intensity == 14) intensity = 0;
+                else if (intensity == 15) intensity = 13;
             }
             for (int j = 0; j < count; j++) {
                 uint16_t v = __builtin_bswap16(g_target[g_pitch * (l - g_line) + x + i]);
                 uint8_t r = (v & 31), g = ((v >> 5) & 63), b = ((v >> 11) & 31);
-                uint8_t newr = r + (31 - r) * intensity / 15;
-                uint8_t newg = g + (63 - g) * intensity / 15;
-                uint8_t newb = b + (31 - b) * intensity / 15;
+                uint8_t newr = r + (31 - r) * intensity / 13;
+                uint8_t newg = g + (63 - g) * intensity / 13;
+                uint8_t newb = b + (31 - b) * intensity / 13;
                 g_target[g_pitch * (l - g_line) + x + i++] = __builtin_bswap16((newr << 0) | (newg << 5) | (newb << 11));
             }
         }

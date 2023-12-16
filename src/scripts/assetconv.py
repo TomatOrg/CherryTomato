@@ -8,8 +8,8 @@ def to_c_str(text):
     cstr = create_string_buffer(text.encode(encoding='UTF-8'))
     return cast(pointer(cstr), POINTER(c_char))
 
-def bitwrite(bitstring, data, bits):
-    bitstring += (bin(data)[2:].zfill(bits))[::-1]
+def bitwrite(bitstring, data):
+    bitstring += (bin(data)[2:].zfill(4))[::-1]
     return bitstring
 
 def dump(name, array):
@@ -28,7 +28,7 @@ def comp(buffer, height, width, pitch):
         vals = b''
         for x in range(width):
             val = pow(buffer[x + y * pitch] / 255.0, 1 / 1.8)
-            vals += bytes([int(val * 15)])
+            vals += bytes([min(13, round(val * 13))])
 
         bitstream = ''
 
@@ -37,15 +37,20 @@ def comp(buffer, height, width, pitch):
         for i in range(1, len(vals) + 1):
             if i != len(vals) and vals[i] == vals[i - 1]:
                 count += 1
-            else:
-                if vals[i-1] == 0 or vals[i-1] == 15:
+            elif not (vals[i-1] == 0 and i == len(vals)):
+                # 0 ..= 13 = single colors
+                # 14 = rle black
+                # 14 = rle white
+
+                if (vals[i-1] == 0 or vals[i-1] == 13) and (count > 1):
                     while count > 0:
-                        bitstream = bitwrite(bitstream, vals[i-1], 4)
-                        bitstream = bitwrite(bitstream, min(count, 15), 4)
+                        code = 14 if vals[i-1] == 0 else 15
+                        bitstream = bitwrite(bitstream, code)
+                        bitstream = bitwrite(bitstream, min(count, 15))
                         count -= 15
                 else:
                     for v in vals[startoff:i]:
-                        bitstream = bitwrite(bitstream, v, 4)
+                        bitstream = bitwrite(bitstream, v)
                 count = 1
                 startoff = i
 
@@ -65,14 +70,7 @@ def conv(outpath, size, outname, usedchars):
 
     filename = outpath
 
-
     error = FT_Init_FreeType(byref(library))
-    FT_Property_Set(library, "cff",
-                            "hinting-engine",
-                            0 )
-    FT_Property_Set(library, "truetype",
-                            "interpreter-version",
-                            35 )
 
     error = FT_New_Face(library, to_c_str(filename), 0, byref(face))
 
@@ -88,7 +86,7 @@ def conv(outpath, size, outname, usedchars):
         startidx = len(atlas)
         width = int(face.contents.glyph.contents.bitmap.width)
         height = int(face.contents.glyph.contents.bitmap.rows)
-        left = int( face.contents.glyph.contents.bitmap_left)
+        left = int(face.contents.glyph.contents.bitmap_left)
         top = int(face.contents.glyph.contents.bitmap_top)
         advance = int(face.contents.glyph.contents.advance.x / 64)
         codepoint = ord(usedchars[i])
@@ -110,7 +108,6 @@ def convicon(inpath, x, y, w, h, outname):
     data = list(image.getdata())
     lines, currchar = comp(data[(x*w + y*h*image.width)::], h, w, image.width)
     out_array = struct.pack('<HH', w, h) + bytes(lines + currchar)
-    print(len(out_array))
     return dump(outname, out_array)
 
 
