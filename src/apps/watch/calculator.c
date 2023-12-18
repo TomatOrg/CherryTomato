@@ -90,7 +90,7 @@ static uint64_t apply_op(uint64_t lhs, uint64_t rhs, op_t op) {
 }
 
 void calculator_handle(ui_event_t *e) {
-    bool isback = back_handle(e, calculator_draw);
+    bool isback = back_handle(e, calculator_draw, NULL);
     if (isback) return;
 
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP) {

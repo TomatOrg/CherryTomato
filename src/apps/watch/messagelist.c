@@ -41,7 +41,7 @@ static void messagelist_draw_x(int top, int x) {
 void messagelist_draw(int top) { messagelist_draw_x(top, 20); }
 
 void messagelist_handle(ui_event_t *e) {
-    bool transition = transition_do();
+    bool transition = transition_do(NULL);
     if (transition) return;
 
     int start, lines;

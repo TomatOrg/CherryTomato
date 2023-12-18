@@ -2,4 +2,4 @@
 #include "apps/watch/ui.h"
 #include "event.h"
 
-bool back_handle(ui_event_t *e, drawer_t draw);
+bool back_handle(ui_event_t *e, drawer_t* draw, cleanup_t* cleanup);

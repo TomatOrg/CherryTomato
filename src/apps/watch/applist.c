@@ -51,7 +51,7 @@ void applist_draw(int top) {
 static bool m_state[3] = {};
 
 void applist_handle(ui_event_t *e) {
-    bool transition = transition_do();
+    bool transition = transition_do(NULL);
     if (transition) return;
 
     int start, lines;

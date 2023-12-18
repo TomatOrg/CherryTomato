@@ -39,7 +39,7 @@ void transition_start(drawer_t* d, handler_t* h, int newscrolloff) {
     g_startscroll_above = newscrolloff;
 }
 
-bool transition_do() {
+bool transition_do(cleanup_t* cleanup) {
     bool animation_done = false;
     if (m_animation) {
         float t = ((get_system_time() / 1000) - m_animation_start) / 1000.0;
@@ -47,6 +47,7 @@ bool transition_do() {
         float half = 120 - spring_ex(120, 0, t, 10, 1);
         animation_done = half >= 119;
         if (animation_done) {
+            if (cleanup) cleanup();
             half = 120;
             m_animation = false;
             g_top = g_scrolloff;

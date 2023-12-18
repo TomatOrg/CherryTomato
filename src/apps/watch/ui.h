@@ -16,6 +16,7 @@
 
 typedef void handler_t(ui_event_t *e);
 typedef void drawer_t(int top);
+typedef void cleanup_t();
 
 void ui_update_scrolloff(int newscrolloff, int *start, int *lines);
 extern handler_t *g_handler;
@@ -40,4 +41,4 @@ void calculator_handle(ui_event_t *e);
 void timerlist_handle(ui_event_t *e);
 
 void transition_start(drawer_t* d, handler_t* h, int newscrolloff);
-bool transition_do();
+bool transition_do(cleanup_t* cleanup);

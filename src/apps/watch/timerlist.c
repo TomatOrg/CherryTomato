@@ -59,7 +59,7 @@ void timerlist_draw(int top) {
 }
 
 void timerlist_handle(ui_event_t *e) {
-    bool transition = transition_do();
+    bool transition = transition_do(NULL);
     if (transition) return;
 
     int start, lines;

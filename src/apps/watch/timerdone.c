@@ -61,10 +61,10 @@ void alarmdone_draw(int top) {
 }
 
 void alarmdone_handle(ui_event_t *e) {
-    bool isback = back_handle(e, alarmdone_draw);
+    bool isback = back_handle(e, alarmdone_draw, NULL);
     if (isback) return;
 
-    bool transition = transition_do();
+    bool transition = transition_do(NULL);
     if (transition) return;
 
     int start = 0, lines = 0;

@@ -184,10 +184,19 @@ static bool m_is_buttonpress = false;
 static bool m_pressed = false;
 static bool m_inhibit_starting_scroll = false;
 
+static void cleanup() {
+    m_timers_scrolloff[0] = 0;
+    m_timers_scrolloff[1] = 0;
+    m_timer_inertial.scroll = 0;
+    m_type = 0;
+    m_notifstate = 0;
+}
+
 void timer_handle(ui_event_t *e) {
-    bool isback = back_handle(e, timer_draw);
+    bool isback = back_handle(e, timer_draw, cleanup);
     if (isback) return;
-    bool transition = transition_do();
+
+    bool transition = transition_do(cleanup);
     if (transition) return;
 
     int start, lines;
@@ -299,14 +308,14 @@ void timer_handle(ui_event_t *e) {
         })
 
         if (m_timer_inertial.type == SCROLL_NONE && m_timer_inertial.scroll == -240) {
+            cleanup();
             g_handler = applist_handle;
-            m_timer_inertial.scroll = 0;
             g_top -= 240;
         }
 
         if (m_timer_inertial.type == SCROLL_NONE && m_timer_inertial.scroll == 240) {
+            cleanup();
             g_handler = watchface_handle;
-            m_timer_inertial.scroll = 0;
             g_top += 240;
         }
     }

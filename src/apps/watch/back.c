@@ -36,7 +36,7 @@ static float rubberband(float x, float coeff, float dim) {
     return (1.0 - (1.0 / ((x * coeff / dim) + 1.0))) * dim;
 }
 
-bool back_handle(ui_event_t *e, drawer_t* draw) {
+bool back_handle(ui_event_t *e, drawer_t* draw, cleanup_t* cleanup) {
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_DOWN) {
         m_starty = e->touchevent.y;
         m_rubberband_prev_start = 0;
@@ -93,6 +93,7 @@ bool back_handle(ui_event_t *e, drawer_t* draw) {
         float off = 240 - spring_ex(240, 0, t, 10, 1);
         int y = off;
         if (y >= 239) {
+            if (cleanup) cleanup();
             y = 240;
             m_back = false;
             g_top = g_scrolloff;
