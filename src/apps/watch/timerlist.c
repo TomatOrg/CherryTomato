@@ -20,7 +20,7 @@
 #include <util/divmod.h>
 #include "task/time.h"
 
-int g_fulltimer_toview = 0;
+static int m_timer_toedit = -1;
 
 static inertial_state_t m_timerlist_inertial = {.has_top_constraint = 1, .has_bottom_constraint = 0};
 static int m_hs_springstart = 0;
@@ -28,6 +28,7 @@ static bool m_hs_isgoingright = false;
 static uint64_t m_hs_spring_starttime = 0;
 static bool m_horiz_animation;
 static bool m_horiz_drag_ended = false;
+void timer_startedit(int toedit);
 
 #define TOP_PAD 10
 #define HEIGHT 40
@@ -85,8 +86,9 @@ void timerlist_handle(ui_event_t *e) {
     // tap
     // ------------------------
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP && tap) {
-        g_fulltimer_toview = floordiv(m_timerlist_inertial.scroll + e->touchevent.y - TOP_PAD, HEIGHT);
-        if (g_fulltimer_toview >= 0 && g_fulltimer_toview < g_timers_count) {
+        m_timer_toedit = floordiv(m_timerlist_inertial.scroll + e->touchevent.y - TOP_PAD, HEIGHT);
+        if (m_timer_toedit >= 0 && m_timer_toedit < g_timers_count) {
+            timer_startedit(m_timer_toedit);
             transition_start(timer_draw, timer_handle, m_timerlist_inertial.startscroll);
         }
     }

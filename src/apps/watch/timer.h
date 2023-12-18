@@ -1,7 +1,7 @@
 #pragma once
 typedef struct ui_timer {
     int hour, minute;
-    int type;
+    int type, notifstate;
     int display_hour, display_minute;
 } ui_timer_t;
 

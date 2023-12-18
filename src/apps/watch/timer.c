@@ -22,7 +22,7 @@
 // ------------------------------------
 // timer list
 // ------------------------------------
-
+static int m_timer_toedit = -1;
 ui_timer_t g_timers[TIMERS_MAX];
 int g_timers_count = 0;
 
@@ -31,6 +31,7 @@ void timer_add(ui_timer_t* t) {
     g_timers[g_timers_count] = *t;
     g_timers_count++;
 }
+
 
 static int m_timers_scrolloff[2] = {0, 0};
 static int m_curr_selected = -1;
@@ -67,6 +68,16 @@ void draw_scrollbar(bool wraparound, int x, int timer_scrolloff, int top) {
 
 static int m_type = 0;
 static int m_notifstate = 0;
+
+
+void timer_startedit(int toedit) {
+    ASSERT(toedit >= 0 && toedit < g_timers_count);
+    m_timer_toedit = toedit;
+    m_type = g_timers[toedit].type;
+    m_notifstate = g_timers[toedit].notifstate;
+    m_timers_scrolloff[0] = g_timers[toedit].display_hour * 40;
+    m_timers_scrolloff[1] = g_timers[toedit].display_minute * 40;
+}
 
 void redraw_checkboxes(int top) {
     uint16_t green = 10 | (50 << 5) | (10 << 11);
@@ -238,7 +249,7 @@ void timer_handle(ui_event_t *e) {
             if (m_pressed && m_is_buttonpress && !(h == 0 && m == 0)) {
                 transition_start(watchface_draw, watchface_handle, 0);
                 // add the timer
-                ui_timer_t t = { .type = m_type };
+                ui_timer_t t = { .type = m_type, .notifstate = m_notifstate };
                 get_values(&t.display_hour, &t.display_minute);
                 if (m_type == 0) { // alarm
                     t.hour = t.display_hour;
@@ -248,7 +259,9 @@ void timer_handle(ui_event_t *e) {
                     t.hour = (dm / 60) % 24;
                     t.minute = dm % 60;
                 }
-                timer_add(&t);
+                if (m_timer_toedit != -1) g_timers[m_timer_toedit] = t;
+                else timer_add(&t);
+                m_timer_toedit = -1;
             }
             m_is_buttonpress = false;
             m_inhibit_starting_scroll = false;
