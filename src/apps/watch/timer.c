@@ -236,7 +236,7 @@ void timer_handle(ui_event_t *e) {
             int h, m;
             get_values(&h, &m);
             if (m_pressed && m_is_buttonpress && !(h == 0 && m == 0)) {
-                transition_start(watchface_draw, watchface_handle);
+                transition_start(watchface_draw, watchface_handle, 0);
                 // add the timer
                 ui_timer_t t = { .type = m_type };
                 get_values(&t.display_hour, &t.display_minute);

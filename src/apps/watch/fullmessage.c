@@ -15,6 +15,7 @@
 #include "text.h"
 #include "thumbnail.h"
 #include "ui.h"
+#include "util/log.h"
 
 int g_fullmessage_toview;
 static inertial_state_t m_fullmessage_inertial = {.has_top_constraint = 1, .has_bottom_constraint = 0};

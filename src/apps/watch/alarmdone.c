@@ -114,6 +114,6 @@ void alarmdone_handle(ui_event_t *e) {
             timer_add(&m_timer);
         }
 
-        if (button_num != -1) transition_start(watchface_draw, watchface_handle);
+        if (button_num != -1) transition_start(watchface_draw, watchface_handle, 0);
     }
 }

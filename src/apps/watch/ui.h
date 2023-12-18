@@ -37,5 +37,5 @@ void fullmessage_handle(ui_event_t *e);
 void applist_handle(ui_event_t *e);
 void calculator_handle(ui_event_t *e);
 
-void transition_start(drawer_t* d, handler_t* h);
+void transition_start(drawer_t* d, handler_t* h, int newscrolloff);
 bool transition_do();
