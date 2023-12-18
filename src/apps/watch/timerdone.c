@@ -72,8 +72,8 @@ void alarmdone_handle(ui_event_t *e) {
     if (e->type == UI_EVENT_REDRAW) {
         start = g_top;
         lines = 240;
-        ASSERT(timers_count > 0);
-        m_timer = timers[0];
+        ASSERT(g_timers_count > 0);
+        m_timer = g_timers[0];
     }
 
 
@@ -93,9 +93,9 @@ void alarmdone_handle(ui_event_t *e) {
         bool timer_repeat = m_timer.type == 1 && button_num == 0;
 
         // remove the timer in all cases, we are gonna readd it if needed
-        if (timers_count > 0) {
-            timers_count--;
-            memmove(timers, timers + 1, timers_count);
+        if (g_timers_count > 0) {
+            g_timers_count--;
+            memmove(g_timers, g_timers + 1, g_timers_count);
         }
 
         if (alarm_snooze) {

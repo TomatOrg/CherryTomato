@@ -95,13 +95,9 @@ void applist_handle(ui_event_t *e) {
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP && tap) {
         int bx = (e->touchevent.x - 12) / 75;
         int by = (e->touchevent.y - 20) / 75;
-        if ((bx==0 && by==0) || (bx==1 && by==0)) {
-            transition_start(timer_draw, timer_handle, 0);
-        }
-
-        if (bx==2 && by==0){
-            transition_start(calculator_draw, calculator_handle, 0);
-        }
+        if (bx == 0 && by == 0) transition_start(timer_draw, timer_handle, 0);
+        if (bx == 1 && by == 0) transition_start(timerlist_draw, timerlist_handle, 0);
+        if (bx == 2 && by == 0) transition_start(calculator_draw, calculator_handle, 0);
 
         if (by==1) {
             m_state[bx] = !m_state[bx];

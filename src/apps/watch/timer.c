@@ -23,13 +23,13 @@
 // timer list
 // ------------------------------------
 
-ui_timer_t timers[TIMERS_MAX];
-int timers_count = 0;
+ui_timer_t g_timers[TIMERS_MAX];
+int g_timers_count = 0;
 
 void timer_add(ui_timer_t* t) {
-    ASSERT(timers_count < 16);
-    timers[timers_count] = *t;
-    timers_count++;
+    ASSERT(g_timers_count < 16);
+    g_timers[g_timers_count] = *t;
+    g_timers_count++;
 }
 
 static int m_timers_scrolloff[2] = {0, 0};

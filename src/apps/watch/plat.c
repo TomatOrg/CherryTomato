@@ -81,11 +81,11 @@ void watch_main() {
 
 static void watch_loop() {
     // TODO: check if the timer is actually done lol
-    if (timers_count > 0) {
+    /*if (g_timers_count > 0) {
         ui_event_t uie = {.type = UI_EVENT_REDRAW};
         g_handler = alarmdone_handle;
         g_handler(&uie);
-    }
+    }*/
 
     uint64_t starttime = (get_system_time() / 1000);
 

@@ -96,6 +96,9 @@ def conv(outpath, size, outname, usedchars):
         atlas += lines + currchar
 
     out_array = struct.pack('<I', len(usedchars)) + charinfos + bytes(atlas)
+    out_array += b'\x00' * 4
+    if len(out_array) % 4 != 0:
+        out_array += b'\x00' * (4 - (len(out_array) % 4))
     print(len(out_array))
     FT_Done_Face(face)
     FT_Done_FreeType(library)
@@ -108,6 +111,9 @@ def convicon(inpath, x, y, w, h, outname):
     data = list(image.getdata())
     lines, currchar = comp(data[(x*w + y*h*image.width)::], h, w, image.width)
     out_array = struct.pack('<HH', w, h) + bytes(lines + currchar)
+    out_array += b'\x00' * 4
+    if len(out_array) % 4 != 0:
+        out_array += b'\x00' * (4 - (len(out_array) % 4))
     return dump(outname, out_array)
 
 
@@ -118,7 +124,7 @@ def main():
     string = ""
     string += conv(outpath + "/BebasNeue.ttf", 180, "bebas1", "0123456789")
     string += conv(outpath + "/BebasNeue.ttf", 86, "bebas2", "0123456789+:")
-    string += conv(outpath + "/BebasNeue.ttf", 32, "bebas3", " ABCDEFGHIJKLNMOPQRSTUVWXYZ0123456789")
+    string += conv(outpath + "/BebasNeue.ttf", 32, "bebas3", " ABCDEFGHIJKLNMOPQRSTUVWXYZ0123456789+-:")
     string += conv(outpath + "/BebasNeue.ttf", 50, "bebas4", "0123456789+-:")
     string += conv(outpath + "/Roboto.ttf", 18, "roboto", " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ")
     string += convicon(assetpath + "/icons.png", 0, 0, 64, 64, "timeredit")
