@@ -43,7 +43,20 @@ static void timerlist_draw_x(int top, int x) {
     }
 }
 
-void timerlist_draw(int top) { timerlist_draw_x(top, 20); }
+static void centertext(const char* str, int basey) {
+    int size = text_getlinesize(font_roboto, str);
+    text_drawline(font_roboto, str, (240-size) / 2, basey);
+}
+
+void timerlist_draw(int top) {
+    if (g_timers_count > 0) timerlist_draw_x(top, 20);
+    else {
+        centertext("No timers or alarms added.", top + 80);
+        centertext("You can create them from", top + 120);
+        centertext("your phone or from", top + 140);
+        centertext("the Timer app", top + 160);
+    }
+}
 
 void timerlist_handle(ui_event_t *e) {
     bool transition = transition_do();
