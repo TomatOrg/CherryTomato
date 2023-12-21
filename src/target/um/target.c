@@ -89,11 +89,18 @@ static void sdl_update() {
 #endif
 }
 
+long long perf_stop();
+
 void target_set_vertical_scrolloff(uint16_t scrolloff) {
+    int max = 64*1000*1000 / 4 / 40;
+    int cyc = perf_stop();
+    if (cyc > max) {
+        printf("WARNING: %d %d\n", cyc, max);
+    }
     if (target_scrolloff != scrolloff) {
         target_scrolloff = scrolloff;
-        sdl_update();
     }
+    sdl_update();
 }
 void target_blit(uint16_t *buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     for (int i = 0; i < h; i++) {
@@ -101,5 +108,4 @@ void target_blit(uint16_t *buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t 
             framebuffer[(x + j) + ((y + i) % 320) * 240] = __builtin_bswap16(buffer[i * w + j]);
         }
     }
-    sdl_update();
 }
