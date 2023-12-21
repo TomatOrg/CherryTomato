@@ -124,7 +124,7 @@ def main():
     string = ""
     string += conv(outpath + "/BebasNeue.ttf", 180, "bebas1", "0123456789")
     string += conv(outpath + "/BebasNeue.ttf", 86, "bebas2", "0123456789+:")
-    string += conv(outpath + "/BebasNeue.ttf", 32, "bebas3", " ABCDEFGHIJKLNMOPQRSTUVWXYZ0123456789+-:")
+    string += conv(outpath + "/BebasNeue.ttf", 32, "bebas3", " ABCDEFGHIJKLNMOPQRSTUVWXYZ0123456789+-:%")
     string += conv(outpath + "/BebasNeue.ttf", 50, "bebas4", "0123456789+-:")
     string += conv(outpath + "/Roboto.ttf", 18, "roboto", " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ")
     string += convicon(assetpath + "/icons.png", 0, 0, 64, 64, "timeredit")

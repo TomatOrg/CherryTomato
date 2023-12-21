@@ -14,6 +14,7 @@
 #include "plat.h"
 #include "text.h"
 #include "thumbnail.h"
+#include "roundedrect.h"
 #include "ui.h"
 #include <util/divmod.h>
 
@@ -24,26 +25,65 @@ int g_time_minute = 0;
 int g_time_weekday = 0;
 inertial_state_t m_watchface_inertial = {.has_top_constraint = 1, .has_bottom_constraint = 1};
 
+#define RED8(x) ((x) & 0xFF)
+#define GREEN8(x) ((x >> 8) & 0xFF)
+#define BLUE8(x) ((x >> 16) & 0xFF)
+
+static void draw_diagonal(int xstart, int ystart, int xend, int yend, int thickness) {
+    int start = MAX(g_line, ystart);
+    int end = MIN(g_line + g_nlines, yend);
+    int slope = (xend - xstart) * 256 / (yend - ystart);
+    for (int y = start; y < end; y++) {
+        int x = xstart * 256 + slope * (y - ystart);
+        int mod = x % 256;
+        x /= 256;
+
+        // TODO: slow and approximate broken gamma
+        // should be replaced with a lookup table
+        // and use the same gamma curve as specified in the ST7789 settings
+        // this is very important at low bpp
+        int right = sqrtf(mod / 256.0) * 63.0;
+        int left = sqrtf(1.0 - mod / 256.0) * 63.0;
+
+        int rgb = 0xf06b5e;
+
+        g_target[(y - g_line) * g_pitch + x] = __builtin_bswap16(
+            ((RED8(rgb) * (left >> 1) / 256) << 0) |
+            ((GREEN8(rgb) * left / 256) << 5) |
+            ((BLUE8(rgb) * (left >> 1) / 256) << 11));
+        g_target[(y - g_line) * g_pitch + x + thickness] = __builtin_bswap16(
+            ((RED8(rgb) * (right >> 1) / 256) << 0) |
+            ((GREEN8(rgb) * right / 256) << 5) |
+            ((BLUE8(rgb) * (right >> 1) / 256) << 11));
+        for (int j = 1; j < thickness; j++) g_target[(y - g_line) * g_pitch + x + j] = __builtin_bswap16(
+            ((RED8(rgb) * 31 / 256) << 0) |
+            ((GREEN8(rgb) * 63 / 256) << 5) |
+            ((BLUE8(rgb) * 31 / 256) << 11)
+        );
+    }
+}
+
 void watchface_draw(int top) {
-    char month_and_day[16];
-    memcpy(month_and_day, &"JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC"[g_time_month * 3], 3);
-    month_and_day[3] = ' ';
-    month_and_day[4] = '0' + g_time_monthday / 10;
-    month_and_day[5] = '0' + g_time_monthday % 10;
-    month_and_day[6] = 0;
-    char *dayoftheweek = &"SUN\0MON\0TUE\0THU\0WED\0SAT\0FRI\0"[g_time_weekday * 4];
-    // TODO: not use sprintf_ here
-    char messages[8];
-    sprintf_(messages, "%d", g_messages_num);
+    char text[16];
+    const char* weekday = &"SUN\0MON\0TUE\0THU\0WED\0SAT\0FRI\0"[g_time_weekday * 4];
+    const char* month = &"JAN\0FEB\0MAR\0APR\0MAY\0JUN\0JUL\0AUG\0SEP\0OCT\0NOV\0DEC"[g_time_month * 4];
+    sprintf_(text, "%s %s %d", weekday, month, g_time_monthday);
 
-    text_drawchar(font_bebas1, g_time_hour / 10, 10, 140 + top);
-    text_drawchar(font_bebas1, g_time_hour % 10, 10 + 56 + 7, 140 + top);
+    char hour[16], min[16];
+    sprintf_(hour, "%02d", g_time_hour);
+    sprintf_(min, "%02d", g_time_minute);
 
-    text_drawchar(font_bebas2, g_time_minute / 10, 10 + 56 + 7 + 56 + 16, 76 + top);
-    text_drawchar(font_bebas2, g_time_minute % 10, 10 + 56 + 7 + 56 + 16 + 32, 76 + top);
+    text_drawline(font_bebas2, hour, 148, top + 65);
+    text_drawline(font_bebas2, min, 131, top + 130);
+    text_drawline(font_bebas3, text, 110, top + 162);
 
-    text_drawline(font_bebas3, dayoftheweek, 10 + 56 + 7 + 56 + 16 + 4, 110 + top);
-    text_drawline(font_bebas3, month_and_day, 10 + 56 + 7 + 56 + 16 + 4, 140 + top);
+    draw_diagonal(129, top + 0, 86, top + 172, 8);
+
+    text_drawline(font_bebas3, "10000", 40, top + 42);
+    text_drawline(font_bebas3, "100%", 40, top + 82);
+    text_drawline(font_bebas3, "200", 40, top + 122);
+
+    roundedrect_round(15, top + 180, 210, 48, 5, (25 | (40 << 5) | (25 << 11)));
 }
 
 void watchface_handle(ui_event_t *e) {
