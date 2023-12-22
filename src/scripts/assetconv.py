@@ -63,6 +63,8 @@ def comp(buffer, height, width, pitch):
     return lines, currchar
 
 def conv(outpath, size, outname, usedchars):
+    usedchars = sorted(usedchars)
+
     library  = FT_Library()
     matrix   = FT_Matrix()
     face     = FT_Face()

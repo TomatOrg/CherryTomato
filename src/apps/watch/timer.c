@@ -46,7 +46,9 @@ void draw_scrollbar(bool wraparound, int x, int timer_scrolloff, int top) {
         if (wraparound || (!wraparound && num >= 0)) {
             // TODO: dont use sprintf_
             static char buf[3];
-            sprintf_(buf, "%02d", num);
+            buf[0] = num / 10 + '0';
+            buf[1] = num % 10 + '0';
+            buf[2] = 0;
             text_drawline(font_bebas4, buf, x, o + top + 210 + 40 * i);
         }
     }
@@ -54,12 +56,12 @@ void draw_scrollbar(bool wraparound, int x, int timer_scrolloff, int top) {
         int fading = 48 - ABS((top + 240 - 48) - (g_line + l));
         if (fading < 0) fading = 0;
         if (fading > 48) fading = 48;
-        // TODO: rewrite this
+        // TODO: this is a surprising bottleneck, rewrite this
         for (int i = 0; i < 40; i++) {
             uint16_t px = __builtin_bswap16(g_target[g_pitch * l + x + i]);
-            uint32_t r = ((px >> 0) & ((1 << 5) - 1)) * fading / 48;
-            uint32_t g = ((px >> 5) & ((1 << 6) - 1)) * fading / 48;
-            uint32_t b = ((px >> 11) & ((1 << 5) - 1)) * fading / 48;
+            uint32_t r = ((px >> 0) & 31) * fading * (256/48) / 256;
+            uint32_t g = ((px >> 5) & 63) * fading * (256/48) / 256;
+            uint32_t b = ((px >> 11) & 31) * fading * (256/48) / 256;
             g_target[g_pitch * l + x + i] = __builtin_bswap16(r | (g << 5) | (b << 11));
         }
     }

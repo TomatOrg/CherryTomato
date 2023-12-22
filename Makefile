@@ -16,7 +16,7 @@ TARGET 			?= ttgo-twatch-2020-v2
 OUT_DIR			:= out
 
 # The compiler flags
-CFLAGS 			:= -Os -fno-tree-vectorize -flto
+CFLAGS 			:= -O3 -fno-tree-vectorize -flto
 CFLAGS 			+= -Wall -Werror
 CFLAGS 			+= -Wno-unused-label -Wno-unused-function
 CFLAGS 			+= -Isrc
