@@ -203,7 +203,6 @@ void timer_handle(ui_event_t *e) {
 
     int start, lines;
     bool is_viewscroll = false;
-
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_DOWN) {
         int tx = e->touchevent.x, ty = m_timer_inertial.scroll + e->touchevent.y;
         m_curr_selected = -1;
@@ -296,13 +295,16 @@ void timer_handle(ui_event_t *e) {
         handle_inertial(&m_scrollbar_inertial, e);
         m_timers_scrolloff[m_curr_selected] = m_scrollbar_inertial.scroll;
 
-        int startoff = 90 + 70 * (m_curr_selected - 1);
-        DO_DRAW(startoff, g_top + (240 - 96), 40, 96,
-            draw_scrollbar(m_curr_selected != 0, 0, m_timers_scrolloff[m_curr_selected], g_top));
-        draw_hinttext();
+        if (m_scrollbar_inertial.type != SCROLL_NONE) {
+            int startoff = 90 + 70 * (m_curr_selected - 1);
+            DO_DRAW(startoff, g_top + (240 - 96), 40, 96,
+                draw_scrollbar(m_curr_selected != 0, 0, m_timers_scrolloff[m_curr_selected], g_top));
+            draw_hinttext();
+        }
     }
 
     if (is_viewscroll) {
+
         DO_DRAW(0, start, 240, lines, {
             watchface_draw(g_top + 240);
             timer_draw(g_top);
