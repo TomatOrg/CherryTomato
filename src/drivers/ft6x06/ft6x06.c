@@ -1,4 +1,6 @@
 #include "ft6x06.h"
+#include "util/except.h"
+#include "util/log.h"
 
 // taken from https://github.com/STMicroelectronics/stm32-ft6x06
 
@@ -29,6 +31,18 @@
 
 /* Threshold for touch detection */
 #define FT6X06_TH_GROUP_REG         0x80U
+
+/* Valid touching peak detect threshold */
+#define FT5X0X_THPEAK_REG           0x81U
+
+/* Touch focus threshold */
+#define FT5X0X_THCAL_REG            0x82U
+
+/* Threshold when there is surface water */
+#define FT5X0X_THWATER_REG          0x83U
+
+/* Threshold of temperature compensation */
+#define FT5X0X_THTEMP_REG           0x84U
 
 /* Filter function coefficients */
 #define FT6X06_TH_DIFF_REG          0x85U
@@ -100,6 +114,16 @@ cleanup:
     return err;
 }
 
+static err_t ft6x06_write_byte(uint8_t reg, uint8_t data) {
+    err_t err = NO_ERROR;
+
+    CHECK_AND_RETHROW(target_ft6x06_write_bytes(0x38, &reg, 1));
+    CHECK_AND_RETHROW(target_ft6x06_write_bytes(0x38, &data, 1));
+
+cleanup:
+    return err;
+}
+
 static err_t ft6x06_probe() {
     err_t err = NO_ERROR;
 
@@ -115,6 +139,21 @@ err_t ft6x06_init() {
     LOG_TRACE("\t--- F6x06 ---");
     CHECK_AND_RETHROW(ft6x06_probe());
 
+    // init values from FT5x06 driver in ESP-IoT solution
+    // Apache 2.0
+    // not sure how much of it applies to our display as the registers aren't in the docs
+    // but the Espressif docs says it *should* work on FT6636 and the likes
+
+    CHECK_AND_RETHROW(ft6x06_write_byte(FT6X06_TH_GROUP_REG, 0x16));
+    CHECK_AND_RETHROW(ft6x06_write_byte(FT5X0X_THPEAK_REG, 0x3C));
+    CHECK_AND_RETHROW(ft6x06_write_byte(FT5X0X_THCAL_REG, 0xE9));
+    CHECK_AND_RETHROW(ft6x06_write_byte(FT5X0X_THWATER_REG, 0x01));
+    CHECK_AND_RETHROW(ft6x06_write_byte(FT5X0X_THTEMP_REG, 0x01));
+    CHECK_AND_RETHROW(ft6x06_write_byte(FT6X06_TH_DIFF_REG, 0xA0));
+    CHECK_AND_RETHROW(ft6x06_write_byte(FT6X06_TIMEENTERMONITOR_REG, 0x0A));
+    CHECK_AND_RETHROW(ft6x06_write_byte(FT6X06_PERIODACTIVE_REG, 0x06));
+    CHECK_AND_RETHROW(ft6x06_write_byte(FT6X06_PERIODMONITOR_REG, 0x28));
+
 cleanup:
     return err;
 }
@@ -122,8 +161,8 @@ cleanup:
 err_t ft6x06_touch(bool* touched, uint16_t *x, uint16_t *y) {
     err_t err = NO_ERROR;
 
-    uint8_t status[5];
-    ft6x06_read(FT6X06_TD_STAT_REG, status, 5);
+    uint8_t status[7];
+    CHECK_AND_RETHROW(ft6x06_read(FT6X06_TD_STAT_REG, status, 7));
 
     if (status[0] == 0 || status[0] > 2) {
         *touched = false;
@@ -132,8 +171,8 @@ err_t ft6x06_touch(bool* touched, uint16_t *x, uint16_t *y) {
 
     *touched = true;
 
-    *x = (status[1] << 8) | status[2];
-    *y = (status[3] << 8) | status[4];
+    *x = ((status[1] & 0xF) << 8) | status[2];
+    *y = ((status[3] & 0xF) << 8) | status[4];
 
 cleanup:
     return err;

@@ -7,7 +7,7 @@
 #	- ttgo-twatch-2020-v2
 #	- um
 #
-TARGET 			?= ttgo-twatch-2020-v2
+TARGET 			?= um
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Build flags
@@ -16,7 +16,7 @@ TARGET 			?= ttgo-twatch-2020-v2
 OUT_DIR			:= out
 
 # The compiler flags
-CFLAGS 			:= -Os -g -static
+CFLAGS 			:= -Os -g3 -fno-tree-vectorize -flto
 CFLAGS 			+= -Wall -Werror
 CFLAGS 			+= -Wno-unused-label -Wno-unused-function
 CFLAGS 			+= -fstrict-volatile-bitfields
@@ -32,7 +32,6 @@ LDFLAGS			:=
 # The common source code
 SRCS 			:=
 SRCS 			+= src/apps/entry.c
-SRCS 			+= src/apps/screendemo.c
 SRCS 			+= src/task/time.c
 SRCS 			+= src/util/printf.c
 
@@ -42,6 +41,11 @@ SRCS			+= src/util/libm/ef_sqrt.c
 #-----------------------------------------------------------------------------------------------------------------------
 # Target configurations
 #-----------------------------------------------------------------------------------------------------------------------
+
+default: all
+
+COMPILER_NAME		:= gcc
+OUT_FILE_EXTENSION	:= elf
 
 # Include the target
 TARGET_DIR 		:= src/target/$(TARGET)
@@ -68,7 +72,7 @@ endif
 # Binaries
 #-----------------------------------------------------------------------------------------------------------------------
 
-CC				:= $(CROSS_COMPILER)gcc
+CC				:= $(CROSS_COMPILER)$(COMPILER_NAME)
 OBJCOPY			:= $(CROSS_COMPILER)objcopy
 
 #-----------------------------------------------------------------------------------------------------------------------
@@ -82,10 +86,10 @@ BINS ?=
 -include $(DEPS)
 
 # The elf output, this is not always the last step, so put it in the build dir instead
-$(BUILD_DIR)/firmware.elf: $(OBJS)
+$(BUILD_DIR)/firmware.$(OUT_FILE_EXTENSION): $(OBJS)
 	@echo LD $@
 	@mkdir -p $(@D)
-	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 # Compile c/asm files
 $(BUILD_DIR)/%.c.o: %.c

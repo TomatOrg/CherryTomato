@@ -121,6 +121,9 @@ void entry() {
     // call the target
     target_entry();
 
-    // setup the timer interrupt
+    // set the target
     cherry_tomato_entry();
+
+    // TODO: event loop
+    while(1);
 }

@@ -37,6 +37,7 @@
 #define ST7789_TEOFF		0x34      // Tearing effect line off
 #define ST7789_TEON			0x35      // Tearing effect line on
 #define ST7789_MADCTL		0x36      // Memory data access control
+#define ST7789_VSCSAD		0x37      // Vertical scroll start address of RAM
 #define ST7789_IDMOFF		0x38      // Idle mode off
 #define ST7789_IDMON		0x39      // Idle mode on
 #define ST7789_RAMWRC		0x3C      // Memory write continue (ST7789V)
@@ -226,4 +227,30 @@ void st7789_fillrect(uint16_t col, uint16_t x, uint16_t y, uint16_t w, uint16_t 
         target_st7789_write_byte(col >> 8);
         target_st7789_write_byte(col & 0xFF);
     }
+}
+
+void st7789_blit(uint16_t* buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    uint16_t xend = x + w - 1;
+    uint16_t yend = y + h - 1;
+
+    st7789_write_command(ST7789_CASET);
+    target_st7789_write_byte(x >> 8);
+    target_st7789_write_byte(x & 0xFF);
+    target_st7789_write_byte(xend >> 8);
+    target_st7789_write_byte(xend & 0xFF);
+
+    st7789_write_command(ST7789_RASET);
+    target_st7789_write_byte(y >> 8);
+    target_st7789_write_byte(y & 0xFF);
+    target_st7789_write_byte(yend >> 8);
+    target_st7789_write_byte(yend & 0xFF);
+
+    st7789_write_command(ST7789_RAMWR);
+    target_st7789_write_bytes((const uint8_t*)buffer, w * h * 2);
+}
+
+void st7789_set_vertical_scrolloff(uint16_t scrolloff) {
+    st7789_write_command(ST7789_VSCSAD);
+    target_st7789_write_byte(scrolloff >> 8);
+    target_st7789_write_byte(scrolloff & 0xFF);
 }
