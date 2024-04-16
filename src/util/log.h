@@ -62,12 +62,12 @@ typedef enum log_level {
         } while (0)
 #endif
 
-#define __LOG_CONSOLE_DEBUG(fmt, ...)      __LOG_CONSOLE("[?] " fmt "\r\n", ##__VA_ARGS__)
-#define __LOG_CONSOLE_TRACE(fmt, ...)      __LOG_CONSOLE("[*] " fmt "\r\n", ##__VA_ARGS__)
-#define __LOG_CONSOLE_INFO(fmt, ...)       __LOG_CONSOLE("[+] " fmt "\r\n", ##__VA_ARGS__)
-#define __LOG_CONSOLE_WARNING(fmt, ...)    __LOG_CONSOLE("[!] " fmt "\r\n", ##__VA_ARGS__)
-#define __LOG_CONSOLE_ERROR(fmt, ...)      __LOG_CONSOLE("[-] " fmt "\r\n", ##__VA_ARGS__)
-#define __LOG_CONSOLE_CRITICAL(fmt, ...)   __LOG_CONSOLE("[~] " fmt "\r\n", ##__VA_ARGS__)
+#define __LOG_CONSOLE_DEBUG(fmt, ...)      __LOG_CONSOLE("[?] " fmt "\n", ##__VA_ARGS__)
+#define __LOG_CONSOLE_TRACE(fmt, ...)      __LOG_CONSOLE("[*] " fmt "\n", ##__VA_ARGS__)
+#define __LOG_CONSOLE_INFO(fmt, ...)       __LOG_CONSOLE("[+] " fmt "\n", ##__VA_ARGS__)
+#define __LOG_CONSOLE_WARNING(fmt, ...)    __LOG_CONSOLE("[!] " fmt "\n", ##__VA_ARGS__)
+#define __LOG_CONSOLE_ERROR(fmt, ...)      __LOG_CONSOLE("[-] " fmt "\n", ##__VA_ARGS__)
+#define __LOG_CONSOLE_CRITICAL(fmt, ...)   __LOG_CONSOLE("[~] " fmt "\n", ##__VA_ARGS__)
 
 // TODO: add log-id for more compact logging on uart-less devices and low memory devices
 #define __LOG(LEVEL, FMT, ...) \

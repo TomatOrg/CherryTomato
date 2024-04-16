@@ -9,6 +9,12 @@
 #
 TARGET 			?= um
 
+#
+# Do we have debug code enabled
+# 	y/n
+#
+DEBUG			?= y
+
 #-----------------------------------------------------------------------------------------------------------------------
 # Build flags
 #-----------------------------------------------------------------------------------------------------------------------
@@ -32,7 +38,11 @@ LDFLAGS			:=
 # The common source code
 SRCS 			:=
 SRCS 			+= src/apps/entry.c
-SRCS 			+= src/task/time.c
+SRCS 			+= src/task/lock.c
+SRCS 			+= src/task/event.c
+SRCS 			+= src/task/timer.c
+SRCS 			+= src/task/tpl.c
+
 SRCS 			+= src/util/printf.c
 
 SRCS			+= src/util/libm/libm.c
@@ -66,6 +76,12 @@ include $(ARCH_DIR)/arch.mk
 # If the target/platform provide a console then set it
 ifneq ($(HAS_CONSOLE),0)
 CFLAGS += -D__HAS_CONSOLE__
+endif
+
+ifeq ($(DEBUG),y)
+CFLAGS += -D__DEBUG__
+else
+CFLAGS += -DNDEBUG
 endif
 
 #-----------------------------------------------------------------------------------------------------------------------

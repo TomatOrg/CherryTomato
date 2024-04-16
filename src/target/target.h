@@ -27,3 +27,10 @@ void target_touch(bool* pressed, int* x, int* y);
 
 void target_set_vertical_scrolloff(uint16_t scrolloff);
 void target_blit(uint16_t* buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+
+//----------------------------------------------------------------------------------------------------------------------
+// Timer related
+//----------------------------------------------------------------------------------------------------------------------
+
+void target_set_next_tick(uint64_t tick);
+uint64_t target_get_current_tick();

@@ -9,14 +9,6 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/html5.h>
-#else
-#include <asm/unistd.h>
-#include <linux/perf_event.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <unistd.h>
 #endif
 
 static void event_loop() {
@@ -35,7 +27,7 @@ int main() {
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop_arg(event_loop, NULL, -1, true);
 #else
-    while (true) {
+    for (;;) {
         event_loop();
     }
 #endif
@@ -44,13 +36,5 @@ int main() {
 }
 
 void putchar_(char c) {
-    putchar(c);
-}
-
-uint64_t get_system_time(void) {
-    return SDL_GetTicks64() * 1000;
-}
-
-uint64_t platform_timer_get_period(void) {
-    return 0;
+    fputc(c, stdout);
 }

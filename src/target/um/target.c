@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 
 #include "perf.h"
+#include "task/timer_internal.h"
 
 /**
  * Main display
@@ -28,6 +29,11 @@ static uint16_t m_framebuffer[240 * 320];
  * The scroll offset
  */
 static int m_target_scrolloff;
+
+/**
+ * The time of the next tick
+ */
+static uint64_t m_next_tick;
 
 /**
  * Blit the full framebuffer as needed
@@ -77,9 +83,18 @@ void target_loop() {
         }
     }
 
+    // check for timer
+    if (SDL_GetTicks64() >= m_next_tick) {
+        timer_dispatch();
+    }
+
+    // update the display
+    // TODO: cap at some fps
     sdl_update();
 
-    SDL_Delay(10);
+    // sleep for some time
+    // TODO: something smarter somehow
+    SDL_Delay(1);
 }
 
 void target_entry(void) {
@@ -143,3 +158,14 @@ void target_blit(uint16_t* buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t 
     }
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+// Timer related
+//----------------------------------------------------------------------------------------------------------------------
+
+void target_set_next_tick(uint64_t tick) {
+    m_next_tick = tick;
+}
+
+uint64_t target_get_current_tick() {
+    return SDL_GetTicks64();
+}
