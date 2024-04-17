@@ -18,7 +18,6 @@ OUT_FILE 	:= $(BUILD_DIR)/firmware.elf
 
 SRCS 		+= $(ARCH_DIR)/vectors.c
 SRCS 		+= $(ARCH_DIR)/vectors.S
-SRCS 		+= $(ARCH_DIR)/builtins.c
 SRCS 		+= $(ARCH_DIR)/builtins.S
 
 fetch-toolchain:

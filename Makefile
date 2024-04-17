@@ -5,9 +5,10 @@
 #
 # The target to compile for:
 #	- ttgo-twatch-2020-v2
+# 	- pinetime
 #	- um
 #
-TARGET 			?= ttgo-twatch-2020-v2
+TARGET 			?= pinetime
 
 #
 # Do we have debug code enabled
@@ -25,7 +26,6 @@ OUT_DIR			:= out
 CFLAGS 			:= -Os -g3 -fno-tree-vectorize -flto
 CFLAGS 			+= -Wall -Werror
 CFLAGS 			+= -Wno-unused-label -Wno-unused-function
-CFLAGS 			+= -fstrict-volatile-bitfields
 CFLAGS 			+= -Isrc
 CFLAGS 			+= -DPRINTF_SUPPORT_DECIMAL_SPECIFIERS=0
 CFLAGS 			+= -DPRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS=0
@@ -45,9 +45,6 @@ SRCS 			+= src/task/tpl.c
 
 SRCS 			+= src/util/alloc.c
 SRCS 			+= src/util/printf.c
-
-SRCS			+= src/util/libm/libm.c
-SRCS			+= src/util/libm/ef_sqrt.c
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Target configurations
