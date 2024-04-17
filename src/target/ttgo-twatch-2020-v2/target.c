@@ -6,10 +6,11 @@
 #include "hardware/spi.h"
 #include "drivers/st7789/st7789.h"
 #include "drivers/ft6x06/ft6x06.h"
-#include "task/time.h"
+#include "task/timer.h"
 #include "intrin.h"
 #include "vectors.h"
 #include "core-isa.h"
+#include "task/timer_internal.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Pin assignments
@@ -81,9 +82,9 @@ static err_t init_touchscreen() {
     err_t err = NO_ERROR;
 
     axp202_set_power_output(AXP202_CHANNEL_EXTEN, true);
-    udelay(10000);
+    delay(10);
     axp202_set_power_output(AXP202_CHANNEL_EXTEN, false);
-    udelay(8000);
+    delay(8);
     axp202_set_power_output(AXP202_CHANNEL_EXTEN, true);
 
     ft6x06_init();
@@ -96,7 +97,15 @@ cleanup:
 // System time management - use ccount + high priority overflow
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * The amount of overflows we had in the timer
+ */
 static volatile uint32_t m_ccount_overflow = 0;
+
+/**
+ * The next tick we should dispatch the timers on
+ */
+static uint64_t m_next_tick = 0;
 
 static void ccount_overflow_interrupt() {
     // increase the overflow
@@ -111,6 +120,7 @@ static void ccount_overflow_interrupt() {
  * and arm the timer
  */
 static void init_system_time() {
+    // overflow for keeping the time properly
     WSR(CCOMPARE2, 0);
     register_interrupt(XCHAL_TIMER2_INTERRUPT, ccount_overflow_interrupt);
 }
@@ -118,13 +128,17 @@ static void init_system_time() {
 /**
  * Get the system time properly
  */
-uint64_t get_system_time() {
+uint64_t target_get_current_tick() {
     uint32_t high, low;
     do {
         high = m_ccount_overflow;
         low = RSR(CCOUNT);
     } while (high != m_ccount_overflow);
     return (((uint64_t)high << 32) | low) / 80;
+}
+
+void target_set_next_tick(uint64_t tick) {
+    m_next_tick = tick;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -174,7 +188,7 @@ void target_entry(void) {
     // display spi
     spi_init(&g_spi2,
              ST7789_SCLK, ST7789_MOSI, INVALID_GPIO, ST7789_CS,
-             80 * 1000 * 1000, SPI_DATA_MODE0);
+             80 * 1000 * 1000, SPI_DATA_MODE3);
 
     //
     // Initialize hardware
@@ -190,6 +204,17 @@ cleanup:
         LOG_CRITICAL("Failed to initialize hardware :(");
         while (1);
     }
+}
+
+void target_loop() {
+    // TODO: use interrupt instead
+    if (m_next_tick != 0) {
+        if (target_get_current_tick() >= m_next_tick) {
+            timer_dispatch();
+        }
+    }
+
+    // TODO: go to sleep
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

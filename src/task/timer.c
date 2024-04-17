@@ -118,3 +118,8 @@ void timer_dispatch() {
 
     lock_release(&m_timer_lock);
 }
+
+void delay(size_t ms) {
+    uint64_t deadline = target_get_current_tick() + ms;
+    while (target_get_current_tick() < deadline);
+}

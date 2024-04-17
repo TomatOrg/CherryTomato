@@ -7,7 +7,7 @@
 #	- ttgo-twatch-2020-v2
 #	- um
 #
-TARGET 			?= um
+TARGET 			?= ttgo-twatch-2020-v2
 
 #
 # Do we have debug code enabled

@@ -10,6 +10,9 @@ SRCS 		+= src/drivers/axp202/axp202.c
 SRCS 		+= src/drivers/st7789/st7789.c
 SRCS 		+= src/drivers/ft6x06/ft6x06.c
 
+# Serial uses CRLF
+CFLAGS 		+= -D__USE_CRLF__
+
 all: $(BIN_DIR)/firmware.bin
 
 # Quick way to run the firmware without flashing it

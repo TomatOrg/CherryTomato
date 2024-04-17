@@ -41,6 +41,10 @@ static inline void __isync(void) {
  */
 extern uint32_t g_enabled_interrupts;
 
+static inline bool get_interrupt_state() {
+    return RSR(INTENABLE) != 0;
+}
+
 /**
  * Disable all interrupts
  */

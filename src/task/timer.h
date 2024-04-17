@@ -32,3 +32,9 @@ void timer_set_interval(timer_t* timer, size_t interval);
  * Cancel the timer
  */
 void timer_cancel(timer_t* timer);
+
+/**
+ * Delays the execution by the given amount of
+ * microseconds, meant for drivers to do small waits
+ */
+void delay(size_t ms);
