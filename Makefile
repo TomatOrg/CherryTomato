@@ -43,6 +43,7 @@ SRCS 			+= src/task/event.c
 SRCS 			+= src/task/timer.c
 SRCS 			+= src/task/tpl.c
 
+SRCS 			+= src/util/alloc.c
 SRCS 			+= src/util/printf.c
 
 SRCS			+= src/util/libm/libm.c

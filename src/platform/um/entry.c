@@ -5,6 +5,7 @@
 #include <util/printf.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
+#include "util/alloc.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -15,8 +16,17 @@ static void event_loop() {
     target_loop();
 }
 
+/**
+ * The memory we will give the allocator, to emulate the worst
+ * hardware (pinetime)
+ */
+static char m_memory[64 * 1024];
+
 int main() {
     LOG_INFO("~~~ Cherry Tomato (Usermode simulator) ~~~");
+
+    // add the range first thing
+    mem_add_range(m_memory, sizeof(m_memory));
 
     // call the target
     target_entry();
