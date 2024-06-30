@@ -1,10 +1,7 @@
-#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <util/printf.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include "event.h"
@@ -16,9 +13,8 @@
 #include "thumbnail.h"
 #include "ui.h"
 #include "gesturerecognizer.h"
-#include "util/log.h"
 #include <util/divmod.h>
-#include "task/time.h"
+#include <target/target.h>
 
 
 extern int g_fullmessage_toview;
@@ -94,7 +90,7 @@ void messagelist_handle(ui_event_t *e) {
         m_horiz_animation = true;
         int off = MIN(240, MAX(0, e->touchevent.x - startx));
         m_hs_springstart = off;
-        m_hs_spring_starttime = (get_system_time() / 1000);
+        m_hs_spring_starttime = (target_get_current_tick());
         m_hs_isgoingright = off >= 40;
     }
 
@@ -102,7 +98,7 @@ void messagelist_handle(ui_event_t *e) {
         int off;
         if (m_horiz_animation) {
             off = m_hs_springstart;
-            float elapsed = ((get_system_time() / 1000) - m_hs_spring_starttime) / 1000.0;
+            float elapsed = ((target_get_current_tick()) - m_hs_spring_starttime) / 1000.0;
             if (m_hs_isgoingright) {
                 off = 240 - spring_ex(240 - off, 0, elapsed, 1500, 1);
             } else {

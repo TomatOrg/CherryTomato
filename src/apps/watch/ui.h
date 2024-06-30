@@ -1,6 +1,8 @@
 #pragma once
 #include "event.h"
 #include <stdbool.h>
+#include <util/libc.h>
+#include "plat.h"
 
 #define DO_DRAW(startx, starty, width, height, draw) \
     {   \

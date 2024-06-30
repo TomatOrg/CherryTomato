@@ -5,9 +5,16 @@
 #
 # The target to compile for:
 #	- ttgo-twatch-2020-v2
+# 	- pinetime
 #	- um
 #
-TARGET 			?= ttgo-twatch-2020-v2
+TARGET 			?= pinetime
+
+#
+# Do we have debug code enabled
+# 	y/n
+#
+DEBUG			?= y
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Build flags
@@ -16,7 +23,7 @@ TARGET 			?= ttgo-twatch-2020-v2
 OUT_DIR			:= out
 
 # The compiler flags
-CFLAGS 			:= -O3 -g3 -fno-tree-vectorize -flto
+CFLAGS 			:= -O0 -g3
 CFLAGS 			+= -Wall -Werror
 CFLAGS 			+= -Wno-unused-label -Wno-unused-function
 CFLAGS 			+= -Isrc
@@ -31,13 +38,17 @@ LDFLAGS			:=
 # The common source code
 SRCS 			:=
 SRCS 			+= src/apps/entry.c
+SRCS 			+= src/task/lock.c
+SRCS 			+= src/task/event.c
+SRCS 			+= src/task/timer.c
+SRCS 			+= src/task/tpl.c
 ifneq ($(TARGET), um)
 SRCS 			+= src/task/time.c
 endif
 SRCS 			+= src/util/printf.c
 
-SRCS			+= src/util/libm/libm.c
-SRCS			+= src/util/libm/ef_sqrt.c
+SRCS 			+= src/util/alloc.c
+SRCS 			+= src/util/printf.c
 
 SRCS			+= src/apps/watch/timer.c
 SRCS			+= src/apps/watch/calculator.c
@@ -63,6 +74,11 @@ SRCS			+= src/apps/watch/fullmessage.c
 # Target configurations
 #-----------------------------------------------------------------------------------------------------------------------
 
+default: all
+
+COMPILER_NAME		:= gcc
+OUT_FILE_EXTENSION	:= elf
+
 # Include the target
 TARGET_DIR 		:= src/target/$(TARGET)
 BIN_DIR			:= $(OUT_DIR)/bin/$(TARGET)
@@ -84,11 +100,18 @@ ifneq ($(HAS_CONSOLE),0)
 CFLAGS += -D__HAS_CONSOLE__
 endif
 
+ifeq ($(DEBUG),y)
+CFLAGS += -D__DEBUG__
+else
+CFLAGS += -DNDEBUG
+endif
+
 #-----------------------------------------------------------------------------------------------------------------------
 # Binaries
 #-----------------------------------------------------------------------------------------------------------------------
 
-CC				?= $(CROSS_COMPILER)gcc
+CC				:= $(CROSS_COMPILER)$(COMPILER_NAME)
+OBJCOPY			:= $(CROSS_COMPILER)objcopy
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Generic Targets
@@ -101,10 +124,10 @@ BINS ?=
 -include $(DEPS)
 
 # The elf output, this is not always the last step, so put it in the build dir instead
-$(OUT_FILE): $(OBJS)
+$(BUILD_DIR)/firmware.$(OUT_FILE_EXTENSION): $(OBJS)
 	@echo LD $@
 	@mkdir -p $(@D)
-	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 # Compile c/asm files
 $(BUILD_DIR)/%.c.o: %.c

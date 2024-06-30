@@ -44,6 +44,12 @@ typedef enum log_level {
 
 #define __MIN_LOG_LEVEL__ LOG_LEVEL_DEBUG
 
+#ifdef __USE_CRLF__
+    #define LINE_FEED "\r\n"
+#else
+    #define LINE_FEED "\n"
+#endif
+
 // even if platform doesn't have uart we want to call this function in order
 // to have the format string be checked, so when uart is not available
 // we will just wrap it with an if(0)
@@ -62,12 +68,12 @@ typedef enum log_level {
         } while (0)
 #endif
 
-#define __LOG_CONSOLE_DEBUG(fmt, ...)      __LOG_CONSOLE("[?] " fmt "\r\n", ##__VA_ARGS__)
-#define __LOG_CONSOLE_TRACE(fmt, ...)      __LOG_CONSOLE("[*] " fmt "\r\n", ##__VA_ARGS__)
-#define __LOG_CONSOLE_INFO(fmt, ...)       __LOG_CONSOLE("[+] " fmt "\r\n", ##__VA_ARGS__)
-#define __LOG_CONSOLE_WARNING(fmt, ...)    __LOG_CONSOLE("[!] " fmt "\r\n", ##__VA_ARGS__)
-#define __LOG_CONSOLE_ERROR(fmt, ...)      __LOG_CONSOLE("[-] " fmt "\r\n", ##__VA_ARGS__)
-#define __LOG_CONSOLE_CRITICAL(fmt, ...)   __LOG_CONSOLE("[~] " fmt "\r\n", ##__VA_ARGS__)
+#define __LOG_CONSOLE_DEBUG(fmt, ...)      __LOG_CONSOLE("[?] " fmt LINE_FEED, ##__VA_ARGS__)
+#define __LOG_CONSOLE_TRACE(fmt, ...)      __LOG_CONSOLE("[*] " fmt LINE_FEED, ##__VA_ARGS__)
+#define __LOG_CONSOLE_INFO(fmt, ...)       __LOG_CONSOLE("[+] " fmt LINE_FEED, ##__VA_ARGS__)
+#define __LOG_CONSOLE_WARNING(fmt, ...)    __LOG_CONSOLE("[!] " fmt LINE_FEED, ##__VA_ARGS__)
+#define __LOG_CONSOLE_ERROR(fmt, ...)      __LOG_CONSOLE("[-] " fmt LINE_FEED, ##__VA_ARGS__)
+#define __LOG_CONSOLE_CRITICAL(fmt, ...)   __LOG_CONSOLE("[~] " fmt LINE_FEED, ##__VA_ARGS__)
 
 // TODO: add log-id for more compact logging on uart-less devices and low memory devices
 #define __LOG(LEVEL, FMT, ...) \

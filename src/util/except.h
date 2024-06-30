@@ -34,6 +34,7 @@ typedef enum err {
         } \
     } while (0)
 
+#ifdef __DEBUG__
 #define ASSERT(expr) \
     do { \
         if (!(expr)) { \
@@ -41,3 +42,6 @@ typedef enum err {
             while(1); \
         } \
     } while(0)
+#else
+#define ASSERT(expr)
+#endif

@@ -1,16 +1,9 @@
-#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <util/printf.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
 #include <unistd.h>
 
-#include "event.h"
-#include "plat.h"
 #include "text.h"
-#include "thumbnail.h"
 #include <util/divmod.h>
 
 // TODO: this structure can be optimized in various ways

@@ -122,17 +122,13 @@ void entry() {
     // call the target
     target_entry();
 
-    // setup the timer interrupt
+    // set the target
     cherry_tomato_entry();
-}
 
+    // event loop
+    while(1) {
+        target_loop();
 
-void start_event_loop(loop_fn_t* fn, void* arg) {
-    while (true) {
-        uint64_t starttime = get_system_time();
-        fn(arg);
-        uint64_t after = get_system_time();
-        uint64_t delta = after - starttime;
-        if (delta < 16 * 1000) { udelay(16 * 1000 - delta); }
+        // TODO: wait for interrupt
     }
 }

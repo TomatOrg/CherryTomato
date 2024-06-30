@@ -1,10 +1,9 @@
 #include "physics.h"
 #include "event.h"
-#include "plat.h"
 #include <util/divmod.h>
 #include <math.h>
 #include <stdbool.h>
-#include "task/time.h"
+#include <target/target.h>
 
 int handle_inertial(inertial_state_t *d, ui_event_t *e) {
     if (e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_DOWN) {
@@ -28,7 +27,7 @@ int handle_inertial(inertial_state_t *d, ui_event_t *e) {
         if (d->round || fabsf(d->velocity) > 1) {
             d->type = SCROLL_INERTIAL;
             d->startscroll = d->scroll;
-            d->starttime = (get_system_time() / 1000);
+            d->starttime = target_get_current_tick();
         } else {
             d->type = SCROLL_NONE;
         }
@@ -39,20 +38,20 @@ int handle_inertial(inertial_state_t *d, ui_event_t *e) {
         if (d->type != SCROLL_TRANSITION && ((e->type == UI_EVENT_TOUCH && e->touchevent.action == TOUCHACTION_UP) ||
                                       d->type == SCROLL_INERTIAL)) {
             if (d->has_top_constraint && d->scroll < 0) {
-                d->starttime = (get_system_time() / 1000);
+                d->starttime = target_get_current_tick();
                 d->startscroll = d->scroll + 240;
                 d->transition_isup = true;
                 d->type = SCROLL_TRANSITION;
             }
             if (d->has_bottom_constraint && d->scroll > 0) {
-                d->starttime = (get_system_time() / 1000);
+                d->starttime = target_get_current_tick();
                 d->startscroll = 240 - d->scroll;
                 d->transition_isup = false;
                 d->type = SCROLL_TRANSITION;
             }
         }
         if (d->type == SCROLL_TRANSITION) {
-            float t = ((get_system_time() / 1000) - d->starttime) / 1000.0;
+            float t = (target_get_current_tick() - d->starttime) / 1000.0;
             int s = spring(d->startscroll, 0, t);
             if (d->transition_isup) {
                 d->scroll = s - 240;
@@ -71,7 +70,7 @@ int handle_inertial(inertial_state_t *d, ui_event_t *e) {
     }
 
     if (d->type == SCROLL_INERTIAL) {
-        float t = ((get_system_time() / 1000) - d->starttime) / 1000.0;
+        float t = (target_get_current_tick() - d->starttime) / 1000.0;
 
         if (d->round) t *= 5.0;
 
@@ -94,7 +93,7 @@ int handle_inertial(inertial_state_t *d, ui_event_t *e) {
 
         if (d->has_top_constraint && d->scroll < 0) {
             d->type = SCROLL_BOUNCEBACK;
-            d->starttime = (get_system_time() / 1000);
+            d->starttime = target_get_current_tick();
             d->startscroll = d->scroll;
             d->velocity = d->velocity * powf(0.995, 1000 * t);
         } else if (fabsf(off - target) < 0.75) {
@@ -104,7 +103,7 @@ int handle_inertial(inertial_state_t *d, ui_event_t *e) {
     }
 
     if (d->type == SCROLL_BOUNCEBACK) {
-        float t = ((get_system_time() / 1000) - d->starttime) / 1000.0;
+        float t = (target_get_current_tick() - d->starttime) / 1000.0;
         float off = spring_ex(d->startscroll, d->velocity, t, 500, 1);
         d->scroll = off;
         if (fabsf(off) < 0.75) {

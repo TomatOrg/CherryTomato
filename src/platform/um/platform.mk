@@ -9,6 +9,7 @@ HAS_CONSOLE			:= 1
 
 # Add platform code
 SRCS				+= $(PLATFORM_DIR)/entry.c
+SRCS				+= $(PLATFORM_DIR)/perf.c
 
 # The main target is the firmware binary
 all: $(OUT_FILE)

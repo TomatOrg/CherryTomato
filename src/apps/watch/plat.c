@@ -1,15 +1,10 @@
 #include "plat.h"
-#include "apps/entry.h"
 #include "apps/watch/ui.h"
 #include "event.h"
 #include <util/divmod.h>
+#include <target/target.h>
 
-#include "util/log.h"
 #include "util/except.h"
-#include "drivers/st7789/st7789.h"
-#include "drivers/ft6x06/ft6x06.h"
-#include "task/time.h"
-#include "timer.h"
 
 typedef void handler_t(ui_event_t *e);
 extern handler_t *g_handler;
@@ -59,7 +54,7 @@ void plat_update(int x, int y, int w, int h) {
 }
 
 
-static void watch_loop();
+void watch_loop();
 
 static int m_oldx, m_oldy;
 static bool m_oldpressed;
@@ -74,20 +69,11 @@ void watch_main() {
     g_handler(&uie);
 
     target_touch(&m_oldpressed, &m_oldx, &m_oldy);
-    m_prevframe = (get_system_time() / 1000);
-
-    start_event_loop(watch_loop, NULL);
+    m_prevframe = (target_get_current_tick());
 }
 
-static void watch_loop() {
-    // TODO: check if the timer is actually done lol
-    /*if (g_timers_count > 0) {
-        ui_event_t uie = {.type = UI_EVENT_REDRAW};
-        g_handler = alarmdone_handle;
-        g_handler(&uie);
-    }*/
-
-    uint64_t starttime = (get_system_time() / 1000);
+void watch_loop() {
+    uint64_t starttime = (target_get_current_tick());
 
     bool up = false, down = false;
 

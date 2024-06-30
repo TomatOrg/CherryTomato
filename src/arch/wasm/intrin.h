@@ -4,12 +4,10 @@
 
 #include <util/defs.h>
 
-static inline bool get_interrupt_state() {
-    return false;
-}
-
+// TODO: implement this
 static inline void disable_interrupts() {
 }
 
+// TODO: implement this
 static inline void enable_interrupts() {
 }

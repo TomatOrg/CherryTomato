@@ -1,21 +1,18 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <util/printf.h>
-#include <string.h>
-#include <sys/types.h>
 #include <unistd.h>
+#include <target/target.h>
 
 #include "event.h"
 #include "font.h"
 #include "messagestore.h"
 #include "physics.h"
 #include "plat.h"
-#include "task/time.h"
 #include "text.h"
 #include "ui.h"
 #include <util/divmod.h>
 #include "roundedrect.h"
-#include "util/log.h"
 #include <util/except.h>
 #include "back.h"
 
@@ -65,17 +62,17 @@ bool back_handle(ui_event_t *e, drawer_t* draw, cleanup_t* cleanup) {
         if (m_rubberband) {
             if (rubberband(e->touchevent.y, 0.35, 240) < 20) {
                 m_return = true;
-                m_return_start = get_system_time() / 1000;
+                m_return_start = target_get_current_tick();
             } else {
                 m_back = true;
-                m_back_start = get_system_time() / 1000;
+                m_back_start = target_get_current_tick();
             }
             m_rubberband = false;
         }
     }
 
     if (m_return) {
-        float t = ((get_system_time() / 1000) - m_return_start) / 1000.0;
+        float t = (target_get_current_tick() - m_return_start) / 1000.0;
         t *= 8.0;
         float off = spring_ex(m_rubberband_max, 0, t, 10, 1);
         int y = off;
@@ -88,7 +85,7 @@ bool back_handle(ui_event_t *e, drawer_t* draw, cleanup_t* cleanup) {
     }
 
     if (m_back) {
-        float t = ((get_system_time() / 1000) - m_back_start) / 1000.0;
+        float t = (target_get_current_tick() - m_back_start) / 1000.0;
         t *= 8.0;
         float off = 240 - spring_ex(240, 0, t, 10, 1);
         int y = off;

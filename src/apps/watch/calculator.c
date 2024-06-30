@@ -2,25 +2,17 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <util/printf.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include "event.h"
 #include "font.h"
 #include "messagestore.h"
-#include "physics.h"
-#include "plat.h"
-#include "task/time.h"
 #include "text.h"
-#include "thumbnail.h"
 #include "ui.h"
-#include "timer.h"
 #include "back.h"
 #include <util/divmod.h>
 #include "roundedrect.h"
-#include "util/log.h"
 #include <util/except.h>
 
 typedef enum op {

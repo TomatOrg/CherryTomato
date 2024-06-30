@@ -1,21 +1,17 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <util/printf.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 #include "event.h"
 #include "font.h"
 #include "physics.h"
 #include "plat.h"
-#include "task/time.h"
 #include "text.h"
 #include "ui.h"
 #include "back.h"
 #include "roundedrect.h"
 #include "util/except.h"
-#include "util/log.h"
 #include "timer.h"
 #include <util/divmod.h>
 

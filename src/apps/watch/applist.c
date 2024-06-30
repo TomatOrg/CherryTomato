@@ -1,23 +1,17 @@
-#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <util/printf.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include "event.h"
 #include "font.h"
 #include "messagestore.h"
 #include "physics.h"
-#include "plat.h"
-#include "task/time.h"
 #include "text.h"
 #include "gesturerecognizer.h"
 #include "roundedrect.h"
 #include "ui.h"
-#include "util/log.h"
 #include <util/divmod.h>
 
 inertial_state_t m_applist_inertial = {.has_top_constraint = 1, .has_bottom_constraint = 1};
